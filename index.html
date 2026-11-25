@@ -1,0 +1,3874 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Rafqa Production — Interactive Event Photobooth & Private Gallery</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans, Space Grotesk, JetBrains Mono & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Phosphor Icons & JSZip & FileSaver -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <style>
+    /* ==========================================================================
+       1. DESIGN TOKENS — WARM NEO-BRUTALIST (CREAM, COCOA, TANGERINE, OBSIDIAN)
+       ========================================================================== */
+    :root {
+      --cream-50: #FAF6EE;
+      --cream-100: #F4EDE0;
+      --cream-200: #E8DEC8;
+      --cream-300: #D8C7A8;
+      --cocoa-700: #54351A;
+      --cocoa-800: #3B230E;
+      --cocoa-900: #241305;
+      --tangerine-300: #FDBA74;
+      --tangerine-400: #FB923C;
+      --tangerine-500: #F97316;
+      --tangerine-600: #EA580C;
+      --obsidian-900: #1A1614;
+      --obsidian-950: #120F0D;
+      --danger: #DC2626;
+      --success: #15803D;
+
+      --font-display: 'Plus Jakarta Sans', sans-serif;
+      --font-grotesk: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background-color: var(--cream-50);
+      background-image:
+        linear-gradient(to right, rgba(84, 53, 26, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(84, 53, 26, 0.06) 1px, transparent 1px);
+      background-size: 48px 48px;
+      color: var(--obsidian-900);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: var(--font-display);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    /* ==========================================================================
+       2. NEO-BRUTALIST CARDS, BUTTONS & ANIMATIONS
+       ========================================================================== */
+    .neo-card {
+      background: #FDFBF7;
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 6px 6px 0px var(--obsidian-900);
+      border-radius: 24px;
+    }
+
+    .neo-card-cocoa {
+      background: var(--cream-100);
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 5px 5px 0px var(--cocoa-800);
+      border-radius: 22px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 16px;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid var(--obsidian-900);
+      transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      min-height: 44px;
+      text-align: center;
+    }
+
+    .btn-orange {
+      background: var(--tangerine-500);
+      color: var(--obsidian-950);
+      box-shadow: 4px 4px 0px var(--obsidian-900);
+    }
+
+    .btn-orange:hover:not(:disabled) {
+      background: var(--tangerine-400);
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px var(--obsidian-900);
+    }
+
+    .btn-orange:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px var(--obsidian-900);
+    }
+
+    .btn-dark {
+      background: var(--cocoa-900);
+      color: var(--cream-50);
+      box-shadow: 4px 4px 0px var(--tangerine-500);
+    }
+
+    .btn-dark:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px var(--tangerine-500);
+    }
+
+    .btn-cream {
+      background: var(--cream-100);
+      color: var(--obsidian-950);
+      box-shadow: 3px 3px 0px var(--obsidian-900);
+    }
+
+    .btn-cream:hover:not(:disabled) {
+      background: var(--cream-200);
+      transform: translate(-1px, -1px);
+    }
+
+    .btn-danger {
+      background: #FEE2E2;
+      color: var(--danger);
+      border-color: var(--obsidian-900);
+      box-shadow: 3px 3px 0px var(--obsidian-900);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #FECACA;
+      transform: translate(-1px, -1px);
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      min-height: 38px;
+      border-radius: 12px;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ==========================================================================
+       3. LOADING, TOAST & MODALS
+       ========================================================================== */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--cream-50);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    #loading-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3px solid var(--cream-300);
+      border-top-color: var(--tangerine-500);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 14px 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #toast-container {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      left: 14px;
+      max-width: 380px;
+      margin-left: auto;
+      z-index: 9500;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--obsidian-950);
+      color: var(--cream-50);
+      padding: 12px 16px;
+      border-radius: 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 2px solid var(--tangerine-500);
+      box-shadow: 4px 4px 0px var(--obsidian-900);
+      animation: slideIn 0.25s ease forwards;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* PIN Modal & Delete Confirm Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 15, 13, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 8000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.active { display: flex; }
+
+    /* ==========================================================================
+       4. HEADER & 24-HOUR ACCESS STATUS BAR
+       ========================================================================== */
+    .app-header {
+      background: rgba(250, 246, 238, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--obsidian-900);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 10px 14px;
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .brand-badge-sq {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--tangerine-500);
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 2px 2px 0px var(--obsidian-900);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-grotesk);
+      font-weight: 800;
+      font-size: 0.9rem;
+      transform: rotate(-3deg);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .brand-badge-sq img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand-title-text {
+      font-family: var(--font-grotesk);
+      font-weight: 800;
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--cream-100);
+      padding: 4px;
+      border-radius: 999px;
+      border: 2px solid var(--obsidian-900);
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--cocoa-800);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-btn.active {
+      background: var(--obsidian-950);
+      color: var(--tangerine-300);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ==========================================================================
+       5. VIEWS & STATUS BANNER (UPCOMING / LIVE_ACTIVE / ARCHIVED)
+       ========================================================================== */
+    .view-section {
+      display: none;
+      flex: 1;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .view-section.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 18px 14px 44px;
+    }
+
+    .status-window-banner {
+      background: var(--cocoa-900);
+      color: var(--cream-50);
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 5px 5px 0px var(--tangerine-500);
+      border-radius: 20px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .status-mode-pill {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      background: rgba(255,255,255,0.08);
+      padding: 7px 12px;
+      border-radius: 12px;
+    }
+
+    /* Header Galeri dengan Foto Background */
+    .gallery-hero-banner {
+      position: relative;
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 6px 6px 0px var(--obsidian-900);
+      border-radius: 22px;
+      padding: 28px 20px;
+      margin-bottom: 20px;
+      min-height: 200px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      overflow: hidden;
+      background-color: var(--cocoa-900);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .gallery-hero-actions {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 1.5px solid var(--obsidian-900);
+    }
+
+    .status-pill.live {
+      background: var(--tangerine-500);
+      color: var(--obsidian-950);
+    }
+
+    .status-pill.archived {
+      background: var(--cream-200);
+      color: var(--cocoa-900);
+    }
+
+    .status-pill.upcoming {
+      background: var(--tangerine-300);
+      color: var(--obsidian-950);
+    }
+
+    /* Locked / Upcoming Splash Screen */
+    .gate-splash-card {
+      max-width: 560px;
+      margin: 20px auto;
+      padding: 28px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .countdown-boxes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 20px 0;
+    }
+
+    .cd-box {
+      background: var(--cream-100);
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 3px 3px 0px var(--obsidian-900);
+      border-radius: 14px;
+      padding: 10px 4px;
+    }
+
+    .cd-num {
+      font-family: var(--font-grotesk);
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--tangerine-600);
+      line-height: 1.1;
+    }
+
+    .cd-lbl {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--cocoa-800);
+    }
+
+    /* ==========================================================================
+       6. STUDIO KAMERA PHOTOBOOTH
+       ========================================================================== */
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .camera-card {
+      background: var(--obsidian-950);
+      border-radius: 24px;
+      overflow: hidden;
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 6px 6px 0px var(--obsidian-900);
+    }
+
+    .camera-viewport {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0d0b0a;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #camera-video { display: none; }
+    #camera-preview-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .camera-top-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .cam-pill-btn {
+      background: rgba(26, 22, 20, 0.85);
+      color: var(--cream-50);
+      border: 1.5px solid var(--cream-200);
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .cam-pill-btn.active {
+      background: var(--tangerine-500);
+      color: var(--obsidian-950);
+      border-color: var(--obsidian-900);
+    }
+
+    #countdown-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 15, 13, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    #countdown-number {
+      font-family: var(--font-grotesk);
+      font-size: 5.5rem;
+      font-weight: 800;
+      color: var(--tangerine-400);
+      -webkit-text-stroke: 3px var(--obsidian-950);
+    }
+
+    #shutter-flash {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 25;
+      transition: opacity 0.14s ease-out;
+    }
+
+    #camera-state-msg {
+      position: absolute;
+      inset: 0;
+      background: var(--obsidian-950);
+      color: var(--cream-100);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 15;
+    }
+
+    .camera-bottom-bar {
+      background: var(--cocoa-900);
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      border-top: 2px solid var(--obsidian-900);
+    }
+
+    .camera-bottom-left {
+      justify-self: start;
+      color: var(--cream-50);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    .camera-bottom-right {
+      justify-self: end;
+    }
+
+    .slot-dots {
+      display: flex;
+      gap: 5px;
+      margin-top: 4px;
+    }
+
+    .slot-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(250, 246, 238, 0.25);
+      border: 1.5px solid var(--obsidian-950);
+    }
+
+    .slot-dot.filled {
+      background: var(--tangerine-500);
+    }
+
+    .shutter-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--tangerine-500);
+      border: 3px solid var(--obsidian-950);
+      box-shadow: 0 4px 0 var(--obsidian-950);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.12s ease;
+    }
+
+    .shutter-btn:active:not(:disabled) { transform: scale(0.92); }
+
+    .shutter-btn-inner {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--cream-50);
+      border: 2px solid var(--obsidian-950);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--obsidian-950);
+      font-size: 1.3rem;
+    }
+
+    .captured-slots-panel {
+      margin-top: 14px;
+      padding: 14px;
+    }
+
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .slot-box {
+      aspect-ratio: 4 / 3;
+      background: var(--cream-100);
+      border: 2px dashed var(--cocoa-700);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--cocoa-700);
+    }
+
+    .slot-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .slot-retake-btn {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: var(--obsidian-950);
+      color: var(--tangerine-300);
+      border: 1px solid var(--tangerine-500);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Controls Sidebar */
+    .controls-panel {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .filter-scroll {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .filter-chip {
+      background: var(--cream-50);
+      border: 2px solid var(--obsidian-900);
+      border-radius: 12px;
+      padding: 9px 6px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--obsidian-900);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .filter-chip.active {
+      background: var(--tangerine-400);
+      box-shadow: 2px 2px 0px var(--obsidian-900);
+    }
+
+    .filter-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1.5px solid var(--obsidian-900);
+    }
+
+    /* Visual Frame Selector Cards on Preview Screen */
+    .preview-frame-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .visual-frame-card {
+      background: #FFFFFF;
+      border: 2px solid var(--obsidian-900);
+      border-radius: 14px;
+      padding: 9px 6px;
+      cursor: pointer;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .visual-frame-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .visual-frame-card.active {
+      background: var(--tangerine-300);
+      box-shadow: 3px 3px 0px var(--obsidian-900);
+    }
+
+    .mini-frame-thumb {
+      width: 50px;
+      height: 76px;
+      border-radius: 8px;
+      border: 2px solid var(--obsidian-900);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pose-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .pose-mode-btn {
+      background: var(--cream-50);
+      border: 2px solid var(--obsidian-900);
+      border-radius: 12px;
+      padding: 9px 3px;
+      text-align: center;
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 0.8rem;
+      color: var(--obsidian-950);
+      transition: all 0.15s ease;
+    }
+
+    .pose-mode-btn.active {
+      background: var(--tangerine-500);
+      box-shadow: 2px 2px 0px var(--obsidian-900);
+    }
+
+    /* ==========================================================================
+       7. REVIEW SCREEN, GALLERY, DELETE & SLIDESHOW LIGHTBOX
+       ========================================================================== */
+    .preview-header-bar {
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-layout {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .final-canvas-wrapper {
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 320px;
+    }
+
+    #final-render-canvas {
+      max-width: 100%;
+      max-height: 68vh;
+      height: auto;
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 5px 5px 0px var(--obsidian-900);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--obsidian-950);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 12px;
+      border: 2px solid var(--obsidian-900);
+      background: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 16px; /* Mencegah auto-zoom di iOS Safari */
+      color: var(--obsidian-950);
+    }
+
+    .setup-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px;
+    }
+
+    .gallery-card {
+      position: relative;
+      background: #FDFBF7;
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 4px 4px 0px var(--obsidian-900);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .gallery-card:hover {
+      transform: translate(-2px, -2px);
+    }
+
+    .gallery-card img {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+      display: block;
+      border-bottom: 2px solid var(--obsidian-900);
+    }
+
+    .gallery-card-meta {
+      padding: 9px 10px;
+      font-size: 0.76rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .like-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 2px solid var(--obsidian-900);
+      background: var(--cream-100);
+      color: var(--obsidian-950);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+    }
+
+    .like-btn:hover {
+      transform: scale(1.06);
+      background: var(--cream-200);
+    }
+
+    .like-btn.liked {
+      background: #FEE2E2;
+      border-color: #DC2626;
+      color: #DC2626;
+      box-shadow: 2px 2px 0px var(--obsidian-900);
+    }
+
+    .like-btn-lg {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      border-radius: 12px;
+    }
+
+    /* Lightbox & Slideshow Viewer */
+    #lightbox-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 15, 13, 0.96);
+      backdrop-filter: blur(8px);
+      z-index: 5000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+    }
+
+    #lightbox-modal.active { display: flex; }
+
+    .lightbox-top-bar {
+      width: 100%;
+      max-width: 1060px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--cream-50);
+    }
+
+    .lightbox-stage {
+      position: relative;
+      width: 100%;
+      max-width: 1060px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 8px 0;
+    }
+
+    #lightbox-img {
+      max-width: calc(100% - 96px);
+      max-height: 64vh;
+      border-radius: 14px;
+      border: 2px solid var(--cream-50);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.65);
+      object-fit: contain;
+    }
+
+    .lightbox-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--tangerine-500);
+      color: var(--obsidian-950);
+      border: 2px solid var(--obsidian-900);
+      box-shadow: 3px 3px 0px var(--obsidian-900);
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.15s ease;
+    }
+
+    .lightbox-nav-btn:hover {
+      background: var(--tangerine-400);
+      transform: translateY(-50%) scale(1.08);
+    }
+
+    .lightbox-nav-prev { left: 2px; }
+    .lightbox-nav-next { right: 2px; }
+
+    .slideshow-progress-bar {
+      width: 100%;
+      max-width: 420px;
+      height: 4px;
+      background: rgba(250, 246, 238, 0.2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      display: none;
+    }
+
+    .slideshow-progress-bar.active { display: block; }
+
+    .slideshow-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--tangerine-500);
+    }
+
+    .lightbox-bottom-controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .customizer-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .toggle-item {
+      background: #FFFFFF;
+      border: 2px solid var(--obsidian-900);
+      padding: 10px 11px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .app-footer {
+      background: var(--obsidian-950);
+      color: var(--cream-100);
+      border-top: 2px solid var(--obsidian-900);
+      padding: 24px 14px;
+      text-align: center;
+      margin-top: auto;
+    }
+
+    .footer-contact-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: 12px 0 14px;
+    }
+
+    .footer-contact-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(250, 246, 238, 0.08);
+      border: 1.5px solid rgba(250, 246, 238, 0.22);
+      color: var(--cream-50);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      transition: all 0.16s ease;
+    }
+
+    .footer-contact-pill:hover {
+      background: var(--tangerine-500);
+      color: var(--obsidian-950);
+      border-color: var(--tangerine-500);
+      transform: translateY(-2px);
+    }
+
+    /* ==========================================================================
+       8. RESPONSIVE MOBILE BREAKPOINTS
+       ========================================================================== */
+    @media (max-width: 900px) {
+      .studio-grid,
+      .preview-layout,
+      .customizer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .neo-card {
+        box-shadow: 4px 4px 0px var(--obsidian-900);
+        border-radius: 20px;
+      }
+
+      .neo-card-cocoa {
+        box-shadow: 4px 4px 0px var(--cocoa-800);
+        border-radius: 18px;
+      }
+
+      /* Header stack rapi 2 baris di mobile */
+      .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      .brand-logo {
+        justify-content: center;
+      }
+
+      .nav-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .nav-btn {
+        padding: 8px 6px;
+        font-size: 0.71rem;
+        gap: 4px;
+      }
+
+      .container {
+        padding: 14px 12px 36px;
+      }
+
+      .status-window-banner {
+        padding: 12px 14px;
+        box-shadow: 4px 4px 0px var(--tangerine-500);
+      }
+
+      #booth-event-name {
+        font-size: 1.25rem !important;
+      }
+
+      .status-mode-pill {
+        width: 100%;
+        text-align: center;
+      }
+
+      /* Viewport kamera potret di HP agar nyaman dipakai selfie */
+      .camera-viewport {
+        aspect-ratio: 3 / 4;
+        max-height: 62vh;
+      }
+
+      .cam-pill-btn {
+        padding: 5px 9px;
+        font-size: 0.68rem;
+      }
+
+      .camera-bottom-bar {
+        padding: 10px 12px;
+      }
+
+      .shutter-btn {
+        width: 60px;
+        height: 60px;
+      }
+
+      .shutter-btn-inner {
+        width: 44px;
+        height: 44px;
+      }
+
+      .controls-panel {
+        padding: 14px;
+        gap: 16px;
+      }
+
+      .pose-mode-grid {
+        gap: 5px;
+      }
+
+      .pose-mode-btn {
+        padding: 8px 2px;
+        font-size: 0.74rem;
+      }
+
+      .filter-scroll {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .filter-chip {
+        padding: 8px 4px;
+        font-size: 0.7rem;
+      }
+
+      /* Preview & Frame Cards */
+      .final-canvas-wrapper {
+        padding: 14px;
+        min-height: 260px;
+      }
+
+      .preview-frame-gallery {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      /* Gallery Hero & 2-Column Mobile Grid */
+      .gallery-hero-banner {
+        padding: 20px 16px;
+        min-height: 170px;
+      }
+
+      #gallery-title {
+        font-size: 1.45rem !important;
+      }
+
+      .gallery-hero-actions {
+        width: 100%;
+      }
+
+      .gallery-hero-actions .btn {
+        flex: 1 1 auto;
+        font-size: 0.75rem;
+        padding: 8px 10px;
+      }
+
+      .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .gallery-card {
+        border-radius: 14px;
+        box-shadow: 3px 3px 0px var(--obsidian-900);
+      }
+
+      .gallery-card-meta {
+        padding: 8px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+
+      .gallery-card-meta .like-btn {
+        align-self: flex-start;
+      }
+
+      /* Event Setup Mobile */
+      .setup-two-col,
+      .toggle-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Lightbox Mobile */
+      #lightbox-img {
+        max-width: 100%;
+        max-height: 56vh;
+      }
+
+      .lightbox-nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1.05rem;
+        background: rgba(249, 115, 22, 0.9);
+      }
+
+      .lightbox-bottom-controls .btn,
+      .lightbox-bottom-controls .like-btn-lg {
+        padding: 7px 10px;
+        font-size: 0.74rem;
+        min-height: 36px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-overlay">
+    <div style="font-family: var(--font-grotesk); font-weight: 800; font-size: 1.75rem;">
+      Rafqa <span style="color: var(--tangerine-600);">Production</span>
+    </div>
+    <div class="spinner"></div>
+    <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--cocoa-800);">Memverifikasi akses acara 24 jam...</div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <!-- EVENT PIN GATE MODAL -->
+  <div id="pin-modal" class="modal-backdrop">
+    <div class="neo-card" style="max-width: 380px; width: 100%; padding: 24px; text-align: center;">
+      <div style="width: 50px; height: 50px; border-radius: 16px; background: var(--tangerine-400); border: 2px solid var(--obsidian-900); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.45rem;">
+        <i class="ph-bold ph-lock-key"></i>
+      </div>
+      <h3 style="font-size: 1.35rem; margin-bottom: 6px;">Galeri Privat Acara</h3>
+      <p style="font-size: 0.84rem; color: var(--cocoa-800); margin-bottom: 18px;">
+        Masukkan kode PIN tamu untuk membuka kamera photobooth dan galeri acara ini.
+      </p>
+      <form onsubmit="EventAccessModule.verifyPin(event)" style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="text" id="pin-input-field" inputmode="numeric" maxlength="6" required placeholder="••••"
+          style="text-align: center; font-family: var(--font-mono); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.4em; padding: 12px; border-radius: 14px; border: 2px solid var(--obsidian-900); background: #fff;" />
+        <button type="submit" class="btn btn-orange" style="width: 100%;">Buka Akses Acara</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE PHOTO CONFIRMATION MODAL -->
+  <div id="delete-confirm-modal" class="modal-backdrop" onclick="GalleryModule.closeDeleteConfirm(event)">
+    <div class="neo-card" style="max-width: 380px; width: 100%; padding: 24px; text-align: center;" onclick="event.stopPropagation()">
+      <div style="width: 50px; height: 50px; border-radius: 16px; background: #FEE2E2; color: var(--danger); border: 2px solid var(--obsidian-900); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.5rem;">
+        <i class="ph-bold ph-trash"></i>
+      </div>
+      <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Hapus Foto Ini?</h3>
+      <p id="delete-confirm-desc" style="font-size: 0.84rem; color: var(--cocoa-800); margin-bottom: 18px;">
+        Foto akan dihapus dari galeri album acara ini. Tindakan ini tidak dapat dibatalkan.
+      </p>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-cream" style="flex: 1;" onclick="GalleryModule.closeDeleteConfirm()">Batal</button>
+        <button type="button" class="btn btn-danger" id="btn-confirm-delete-exec" style="flex: 1;" onclick="GalleryModule.executeDelete()">
+          <i class="ph-bold ph-trash"></i> Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-logo" onclick="App.navigate('booth')">
+        <div class="brand-badge-sq" id="navbar-logo-box">
+          <img src="logorafqa.jpeg" alt="Rafqa Production" onerror="this.style.display='none'; this.parentElement.textContent='RP';" />
+        </div>
+        <span class="brand-title-text">
+          Rafqa <span style="color: var(--tangerine-600);">Production</span>
+        </span>
+      </div>
+
+      <nav class="nav-tabs" aria-label="Navigasi Photobooth">
+        <button class="nav-btn active" id="nav-btn-booth" data-view="booth" onclick="App.navigate('booth')">
+          <i class="ph-bold ph-camera"></i> <span>Booth</span>
+        </button>
+        <button class="nav-btn" id="nav-btn-gallery" data-view="gallery" onclick="App.navigate('gallery')">
+          <i class="ph-bold ph-images"></i> <span>Gallery</span>
+        </button>
+        <button class="nav-btn" id="nav-btn-customize" data-view="customize" onclick="App.navigate('customize')">
+          <i class="ph-bold ph-sliders-horizontal"></i> <span>Event Setup</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       VIEW 1: PHOTOBOOTH STUDIO (DENGAN VALIDASI STATUS 24 JAM)
+       ======================================================================== -->
+  <main id="view-booth" class="view-section active">
+    <div class="container">
+      <!-- 24-Hour Status & Event Info Banner -->
+      <div class="status-window-banner">
+        <div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="status-pill live" id="event-status-badge">
+              <i class="ph-fill ph-record"></i> KAMERA AKTIF (24 JAM)
+            </span>
+            <span id="booth-timer-text" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--tangerine-300); font-weight: 700;">
+              Tersisa 23 jam 59 menit
+            </span>
+          </div>
+          <h1 id="booth-event-name" style="font-size: 1.45rem; color: var(--cream-50);">Rafqa Production Photobooth</h1>
+          <p id="booth-event-meta" style="font-size: 0.8rem; color: var(--cream-200);"></p>
+        </div>
+        <div class="status-mode-pill">
+          Mode Pose: <strong id="active-frame-label" style="color: var(--tangerine-300);">3 Foto</strong>
+        </div>
+      </div>
+
+      <!-- SPLASH GATE JIKA STATUS = UPCOMING ATAU ARCHIVED (> 24 JAM) -->
+      <div id="booth-locked-splash" class="neo-card gate-splash-card" style="display: none;">
+        <div id="splash-icon-box" style="width: 58px; height: 58px; border-radius: 18px; background: var(--tangerine-400); border: 2px solid var(--obsidian-900); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.7rem;">
+          <i class="ph-bold ph-hourglass-high"></i>
+        </div>
+        <h2 id="splash-title" style="font-size: 1.55rem; margin-bottom: 8px;">Sesi Photobooth Belum Dimulai</h2>
+        <p id="splash-desc" style="font-size: 0.88rem; color: var(--cocoa-800); max-width: 420px; margin: 0 auto;">
+          Kamera photobooth akan terbuka otomatis selama 24 jam penuh pada tanggal pelaksanaan acara.
+        </p>
+
+        <!-- Countdown Timer untuk UPCOMING -->
+        <div id="upcoming-countdown-box" class="countdown-boxes">
+          <div class="cd-box"><div class="cd-num" id="cd-days">00</div><div class="cd-lbl">Hari</div></div>
+          <div class="cd-box"><div class="cd-num" id="cd-hours">00</div><div class="cd-lbl">Jam</div></div>
+          <div class="cd-box"><div class="cd-num" id="cd-mins">00</div><div class="cd-lbl">Menit</div></div>
+          <div class="cd-box"><div class="cd-num" id="cd-secs">00</div><div class="cd-lbl">Detik</div></div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px;">
+          <button class="btn btn-orange" id="btn-splash-gallery" onclick="App.navigate('gallery')">
+            <i class="ph-bold ph-images"></i> Buka Album Galeri
+          </button>
+          <button class="btn btn-cream" onclick="App.navigate('customize')">
+            <i class="ph-bold ph-calendar"></i> Atur Jadwal
+          </button>
+        </div>
+      </div>
+
+      <!-- STUDIO KAMERA AKTIF (HANYA TAMPIL SAAT LIVE_ACTIVE) -->
+      <div id="booth-active-studio" class="studio-grid">
+        <div>
+          <div class="camera-card">
+            <div class="camera-viewport">
+              <video id="camera-video" autoplay playsinline muted></video>
+              <canvas id="camera-preview-canvas"></canvas>
+
+              <div class="camera-top-controls">
+                <button class="cam-pill-btn" id="btn-flash" onclick="CameraModule.toggleFlash()">
+                  <i class="ph-bold ph-lightning-slash"></i> <span id="flash-status-text">Flash OFF</span>
+                </button>
+                <div style="display: flex; gap: 6px;">
+                  <button class="cam-pill-btn" onclick="CameraModule.toggleMirror()" title="Mirror">
+                    <i class="ph-bold ph-flip-horizontal"></i>
+                  </button>
+                  <button class="cam-pill-btn" onclick="CameraModule.switchCamera()" title="Ganti Kamera">
+                    <i class="ph-bold ph-camera-rotate"></i> <span>Switch</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="countdown-overlay">
+                <div id="countdown-number">3</div>
+              </div>
+              <div id="shutter-flash"></div>
+
+              <div id="camera-state-msg">
+                <i class="ph-bold ph-camera" style="font-size: 2.4rem; color: var(--tangerine-400); margin-bottom: 10px;"></i>
+                <p id="camera-msg-text" style="margin-bottom: 14px; max-width: 300px; font-size: 0.86rem;">Menyiapkan kamera perangkat Anda...</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                  <button class="btn btn-orange btn-sm" onclick="CameraModule.start()">Aktifkan Kamera</button>
+                  <button class="btn btn-cream btn-sm" onclick="CaptureModule.useDemoPhoto()">Mode Simulasi</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="camera-bottom-bar">
+              <div class="camera-bottom-left">
+                <div>Pose: <strong id="slot-progress-text" style="color: var(--tangerine-300);">0 / 3</strong></div>
+                <div class="slot-dots" id="slot-dots-container"></div>
+              </div>
+
+              <button class="shutter-btn" id="btn-shutter" onclick="CaptureModule.triggerCapture()" title="Ambil Foto">
+                <div class="shutter-btn-inner">
+                  <i class="ph-bold ph-camera"></i>
+                </div>
+              </button>
+
+              <div class="camera-bottom-right">
+                <button class="btn btn-orange btn-sm" id="btn-proceed-preview" onclick="PreviewModule.open()" disabled>
+                  Review <i class="ph-bold ph-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slot Tangkapan -->
+          <div class="neo-card-cocoa captured-slots-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700; text-transform: uppercase;">Slot Tangkapan Pose</span>
+              <button class="btn btn-cream btn-sm" onclick="CaptureModule.resetAll()" style="min-height: 30px; padding: 4px 10px; font-size: 0.72rem;">
+                <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset
+              </button>
+            </div>
+            <div class="slots-grid" id="captured-slots-grid"></div>
+          </div>
+        </div>
+
+        <!-- Panel Mode Pose & Filter Kamera -->
+        <div class="neo-card controls-panel">
+          <div>
+            <div style="margin-bottom: 10px;">
+              <span style="font-family: var(--font-display); font-weight: 800; font-size: 1.05rem;">1. Pilih Jumlah Foto</span>
+              <p style="font-size: 0.76rem; color: var(--cocoa-800); margin-top: 2px;">Desain bingkai dipilih setelah semua pose selesai diambil.</p>
+            </div>
+            <div class="pose-mode-grid" id="pose-mode-selector">
+              <button class="pose-mode-btn" data-count="1" onclick="FrameModule.setPoseCount(1)">Single<br><span style="font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;">1 Foto</span></button>
+              <button class="pose-mode-btn" data-count="2" onclick="FrameModule.setPoseCount(2)">Duo<br><span style="font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;">2 Foto</span></button>
+              <button class="pose-mode-btn active" data-count="3" onclick="FrameModule.setPoseCount(3)">Strip<br><span style="font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;">3 Foto</span></button>
+              <button class="pose-mode-btn" data-count="4" onclick="FrameModule.setPoseCount(4)">Grid<br><span style="font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;">4 Foto</span></button>
+              <button class="pose-mode-btn" data-count="6" onclick="FrameModule.setPoseCount(6)">Kolase<br><span style="font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600;">6 Foto</span></button>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-family: var(--font-display); font-weight: 800; font-size: 1.05rem;">2. Filter Kamera</span>
+              <button class="btn btn-cream btn-sm" onclick="FilterModule.select('original')" style="min-height: 28px; padding: 2px 10px; font-size: 0.7rem;">Normal</button>
+            </div>
+            <div class="filter-scroll" id="filter-list-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       VIEW 2: REVIEW SCREEN (PILIH BINGKAI UNIK, NAMA TAMU, UCAPAN & SIMPAN)
+       ======================================================================== -->
+  <section id="view-preview" class="view-section">
+    <div class="container">
+      <div class="preview-header-bar">
+        <button class="btn btn-cream btn-sm" onclick="App.navigate('booth')">
+          <i class="ph-bold ph-arrow-left"></i> Kembali ke Kamera
+        </button>
+        <h2 style="font-size: 1.35rem;">Pilih Frame & Simpan</h2>
+      </div>
+
+      <div class="preview-layout">
+        <div class="neo-card-cocoa final-canvas-wrapper">
+          <canvas id="final-render-canvas"></canvas>
+        </div>
+
+        <div class="neo-card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.84rem; font-weight: 800; color: var(--obsidian-950); margin-bottom: 8px;">
+              Pilih Desain Frame (<span id="preview-pose-count-label">3 Foto</span>)
+            </label>
+            <div class="preview-frame-gallery" id="preview-frame-cards"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Nama Anda (Tercetak di Kartu)</label>
+            <input type="text" id="preview-guest-name" class="form-control" placeholder="Contoh: Rina & Keluarga" oninput="PreviewModule.renderFinal()" />
+          </div>
+
+          <div class="form-group">
+            <label>Ucapan Singkat <span style="font-weight: 400; color: var(--cocoa-700);">(Opsional)</span></label>
+            <input type="text" id="preview-guest-wish" maxlength="60" class="form-control" placeholder="Selamat berbahagia selalu!" oninput="PreviewModule.renderFinal()" />
+          </div>
+
+          <div class="form-group">
+            <label>Ganti Filter Kamera</label>
+            <select id="preview-filter-select" class="form-control" onchange="PreviewModule.changeFilter(this.value)"></select>
+          </div>
+
+          <hr style="border: none; border-top: 2px dashed var(--cream-300); margin: 2px 0;">
+
+          <button class="btn btn-orange" id="btn-upload-drive" onclick="UploadModule.uploadFinalPhoto()">
+            <i class="ph-bold ph-cloud-arrow-up"></i> Simpan ke Album & Galeri
+          </button>
+
+          <button class="btn btn-dark" id="btn-download-photo" onclick="PreviewModule.downloadPhoto()">
+            <i class="ph-bold ph-download-simple"></i> Download ke HP (JPG)
+          </button>
+
+          <button class="btn btn-cream btn-sm" onclick="CaptureModule.retakeFromPreview()">
+            <i class="ph-bold ph-camera-rotate"></i> Foto Ulang Semua Pose
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       VIEW 3: GALERI ALBUM DENGAN HEADER FOTO BACKGROUND, SLIDESHOW & UNDUH (.ZIP)
+       ======================================================================== -->
+  <section id="view-gallery" class="view-section">
+    <div class="container">
+      <!-- Header Galeri dengan Foto Background -->
+      <div class="gallery-hero-banner" id="gallery-hero-header">
+        <div style="position: relative; z-index: 2;">
+          <span class="status-pill live" id="gal-status-pill">MODE LIVE PHOTOBOOTH</span>
+          <h2 id="gallery-title" style="font-size: 1.9rem; color: var(--cream-50); margin-top: 8px; text-shadow: 0 2px 12px rgba(0,0,0,0.65);">
+            Album Kenangan Acara
+          </h2>
+          <p id="gal-status-subtext" style="font-size: 0.84rem; color: var(--cream-100); margin-top: 2px; text-shadow: 0 1px 6px rgba(0,0,0,0.65);">
+            Seluruh foto tamu tersimpan dalam kualitas asli di Google Drive.
+          </p>
+        </div>
+
+        <div class="gallery-hero-actions">
+          <button class="btn btn-dark btn-sm" id="btn-start-slideshow" onclick="GalleryModule.startSlideshow()">
+            <i class="ph-bold ph-slideshow"></i> Slideshow
+          </button>
+          <button class="btn btn-cream btn-sm" id="btn-download-zip" onclick="GalleryModule.downloadAllZip()">
+            <i class="ph-bold ph-file-zip"></i> Download (.ZIP)
+          </button>
+          <button class="btn btn-orange btn-sm" id="btn-gal-back-booth" onclick="App.navigate('booth')">
+            <i class="ph-bold ph-camera"></i> Kamera
+          </button>
+        </div>
+      </div>
+
+      <div id="gallery-content"></div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       VIEW 4: EVENT SETUP (KUSTOMISASI ACARA, FOTO HEADER GALERI, JADWAL & DRIVE)
+       ======================================================================== -->
+  <section id="view-customize" class="view-section">
+    <div class="container">
+      <div style="margin-bottom: 18px;">
+        <span style="font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--tangerine-600);">
+          Konfigurasi & Privasi Acara
+        </span>
+        <h2 style="font-size: 1.65rem;">Pengaturan Acara</h2>
+        <p style="font-size: 0.85rem; color: var(--cocoa-800);">
+          Sesuaikan identitas acara dan privasi PIN tamu. Pengaturan yang diubah akan tersimpan otomatis sampai Anda menekan tombol Reset.
+        </p>
+      </div>
+
+      <div class="customizer-grid">
+        <div class="neo-card" style="padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <div class="form-group">
+            <label>Judul Acara</label>
+            <input type="text" id="cfg-event-name" class="form-control" oninput="EventConfigModule.liveUpdate()" />
+          </div>
+
+          <div class="form-group">
+            <label>Subjudul / Lokasi Acara</label>
+            <input type="text" id="cfg-event-subtitle" class="form-control" placeholder="Contoh: Bandung • #DindaWildan" oninput="EventConfigModule.liveUpdate()" />
+          </div>
+
+          <div class="setup-two-col">
+            <div class="form-group">
+              <label>Tanggal Acara (Buka 24 Jam)</label>
+              <input type="date" id="cfg-event-date" class="form-control" oninput="EventConfigModule.liveUpdate()" />
+            </div>
+            <div class="form-group">
+              <label>PIN Tamu Privat (4-6 Digit)</label>
+              <input type="text" id="cfg-pin-code" maxlength="6" inputmode="numeric" placeholder="Kosong = Tanpa PIN" class="form-control" oninput="EventConfigModule.liveUpdate()" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Footer Text pada Bingkai</label>
+            <input type="text" id="cfg-footer-text" class="form-control" oninput="EventConfigModule.liveUpdate()" />
+          </div>
+
+          <div>
+            <label style="font-size: 0.82rem; font-weight: 700;">Elemen Tercetak pada Bingkai:</label>
+            <div class="toggle-grid">
+              <label class="toggle-item">
+                <span>Judul Acara</span>
+                <input type="checkbox" id="cfg-show-name" checked onchange="EventConfigModule.liveUpdate()">
+              </label>
+              <label class="toggle-item">
+                <span>Lokasi / Hashtag</span>
+                <input type="checkbox" id="cfg-show-hashtag" checked onchange="EventConfigModule.liveUpdate()">
+              </label>
+              <label class="toggle-item">
+                <span>Tanggal</span>
+                <input type="checkbox" id="cfg-show-date" checked onchange="EventConfigModule.liveUpdate()">
+              </label>
+              <label class="toggle-item">
+                <span>Izinkan Download</span>
+                <input type="checkbox" id="cfg-allow-download" checked onchange="EventConfigModule.liveUpdate()">
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px;">
+            <button type="button" class="btn btn-orange" style="flex: 1;" onclick="EventConfigModule.saveConfig()">
+              <i class="ph-bold ph-check-circle"></i> Simpan Pengaturan
+            </button>
+            <button type="button" class="btn btn-danger" onclick="EventConfigModule.resetConfig()" title="Kosongkan & Reset Pengaturan">
+              <i class="ph-bold ph-arrow-counter-clockwise"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Frame Simulation -->
+        <div class="neo-card-cocoa" style="padding: 18px; text-align: center;">
+          <h3 style="font-size: 1.15rem; margin-bottom: 4px;">Pratinjau Bingkai Kustom</h3>
+          <p style="font-size: 0.78rem; color: var(--cocoa-800); margin-bottom: 12px;">Tampilan bingkai & identitas acara yang akan diterima tamu.</p>
+          <canvas id="customizer-preview-canvas" style="max-width: 100%; max-height: 420px; border: 2px solid var(--obsidian-900); box-shadow: 5px 5px 0px var(--obsidian-900);"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTBOX & SLIDESHOW MODAL -->
+  <div id="lightbox-modal" onclick="GalleryModule.closeLightbox(event)">
+    <!-- Top Info & Counter Bar -->
+    <div class="lightbox-top-bar" onclick="event.stopPropagation()">
+      <div style="min-width: 0; flex: 1;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="lightbox-counter" style="font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700; background: var(--tangerine-500); color: var(--obsidian-950); padding: 3px 9px; border-radius: 999px; flex-shrink: 0;">
+            1 / 1
+          </span>
+          <strong id="lightbox-guest-name" style="font-family: var(--font-display); font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            Tamu Undangan
+          </strong>
+        </div>
+        <div id="lightbox-guest-wish" style="font-size: 0.78rem; color: var(--cream-200); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+      </div>
+
+      <button class="btn btn-cream btn-sm" onclick="GalleryModule.closeLightbox()" title="Tutup (Esc)" style="flex-shrink: 0;">
+        <i class="ph-bold ph-x"></i> Tutup
+      </button>
+    </div>
+
+    <!-- Main Stage with Prev / Next Buttons -->
+    <div class="lightbox-stage" onclick="event.stopPropagation()">
+      <button type="button" class="lightbox-nav-btn lightbox-nav-prev" id="lightbox-prev-btn" onclick="GalleryModule.prevPhoto(event)" title="Foto Sebelumnya (Panah Kiri)">
+        <i class="ph-bold ph-caret-left"></i>
+      </button>
+
+      <img id="lightbox-img" src="" alt="Preview Foto" />
+
+      <button type="button" class="lightbox-nav-btn lightbox-nav-next" id="lightbox-next-btn" onclick="GalleryModule.nextPhoto(event)" title="Foto Berikutnya (Panah Kanan)">
+        <i class="ph-bold ph-caret-right"></i>
+      </button>
+    </div>
+
+    <!-- Slideshow Auto-Advance Indicator -->
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
+      <div class="slideshow-progress-bar" id="slideshow-progress-bar">
+        <div class="slideshow-progress-fill" id="slideshow-progress-fill"></div>
+      </div>
+
+      <!-- Bottom Controls -->
+      <div class="lightbox-bottom-controls">
+        <button type="button" class="btn btn-cream btn-sm" onclick="GalleryModule.prevPhoto(event)">
+          <i class="ph-bold ph-skip-back"></i> Prev
+        </button>
+
+        <button type="button" class="btn btn-dark btn-sm" id="lightbox-play-btn" onclick="GalleryModule.toggleSlideshowPlay(event)">
+          <i class="ph-bold ph-play"></i> <span>Slideshow</span>
+        </button>
+
+        <button type="button" class="btn btn-cream btn-sm" onclick="GalleryModule.nextPhoto(event)">
+          Next <i class="ph-bold ph-skip-forward"></i>
+        </button>
+
+        <button type="button" class="like-btn like-btn-lg" id="lightbox-like-btn">
+          <i class="ph-bold ph-heart"></i> <span id="lightbox-like-count">0</span>
+        </button>
+
+        <button type="button" class="btn btn-orange btn-sm" id="lightbox-download-btn">
+          <i class="ph-bold ph-download-simple"></i> Download
+        </button>
+
+        <button type="button" class="btn btn-danger btn-sm" id="lightbox-delete-btn">
+          <i class="ph-bold ph-trash"></i> Hapus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <div style="font-family: var(--font-grotesk); font-weight: 800; font-size: 1.2rem;">
+      Rafqa <span style="color: var(--tangerine-400);">Production</span>
+    </div>
+    <div id="footer-event-display" style="font-size: 0.82rem; color: var(--cream-200); margin-top: 4px;">Rafqa Production Photobooth</div>
+
+    <div class="footer-contact-links">
+      <a href="https://instagram.com/rafqa.id" target="_blank" rel="noopener noreferrer" class="footer-contact-pill">
+        <i class="ph-bold ph-instagram-logo"></i> @rafqa.id
+      </a>
+      <a href="https://wa.me/6281312057089" target="_blank" rel="noopener noreferrer" class="footer-contact-pill">
+        <i class="ph-bold ph-whatsapp-logo"></i> 081312057089
+      </a>
+      <a href="mailto:rafqaproduction@gmail.com" class="footer-contact-pill">
+        <i class="ph-bold ph-envelope-simple"></i> rafqaproduction@gmail.com
+      </a>
+    </div>
+
+    <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--cream-300);">&copy; 2026 Rafqa Production. Seluruh Hak Cipta Dilindungi.</div>
+  </footer>
+
+  <!-- ========================================================================
+       MODULAR JAVASCRIPT ENGINE
+       ======================================================================== -->
+  <script>
+    /**
+     * KONFIGURASI GOOGLE APPS SCRIPT & FOLDER GOOGLE DRIVE
+     */
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxMNlg_fFgslHK-7G2bMEOUkn_60oerC57ef9Qwy3NNriBOkoBSOUn8BKH8VsTsS-mZ1g/exec";
+    const DEFAULT_DRIVE_FOLDER_ID = "1bwWc7x7pxDmDVypltW3nhU05XexlBWfr";
+    const DEFAULT_GALLERY_BG_URL = "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1400&q=80";
+
+    /**
+     * 1. EVENT CONFIG & 24-HOUR ACCESS GATE MODULE
+     */
+    const EventConfigModule = (() => {
+      const FIXED_EVENT_DATE = "2026-11-21";
+
+      const DEFAULT_CONFIG = {
+        eventId: "RP-2026",
+        eventSlug: "rafqa-photobooth",
+        eventName: "Rafqa Photobooth",
+        eventSubtitle: "",
+        eventDate: FIXED_EVENT_DATE,
+        driveFolderId: DEFAULT_DRIVE_FOLDER_ID,
+        galleryHeaderBg: DEFAULT_GALLERY_BG_URL,
+        pinCode: "",
+        scheduleOverride: "auto",
+        footerText: "#RafqaPhotobooth",
+        logoUrl: "",
+        showEventName: true,
+        showHashtag: true,
+        showDate: true,
+        allowDownload: true
+      };
+
+      let currentConfig = { ...DEFAULT_CONFIG };
+      let statusInterval = null;
+
+      function normalizeImageUrl(rawUrl) {
+        if (!rawUrl) return DEFAULT_GALLERY_BG_URL;
+        const trimmed = rawUrl.trim();
+        const driveMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (driveMatch && trimmed.includes('drive.google.com')) {
+          return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+        }
+        return trimmed;
+      }
+
+      function init() {
+        const saved = localStorage.getItem('rafqa_active_event_config');
+        const hasLockedSavedConfig = Boolean(saved);
+        if (saved) {
+          try {
+            currentConfig = { ...currentConfig, ...JSON.parse(saved) };
+            // Migrasi konfigurasi lama Wedding Dea & Dona ke identitas Rafqa Photobooth.
+            if (currentConfig.eventName === "Wedding Dea & Dona") {
+              currentConfig.eventName = DEFAULT_CONFIG.eventName;
+              currentConfig.eventSlug = DEFAULT_CONFIG.eventSlug;
+              currentConfig.eventId = DEFAULT_CONFIG.eventId;
+            }
+            if (currentConfig.footerText === "#DEArlyDONA") {
+              currentConfig.footerText = DEFAULT_CONFIG.footerText;
+            }
+            if (currentConfig.driveFolderId === "1UvhMAEjGSuIfg8fuWdbyzPtUBzz01iYR") {
+              currentConfig.driveFolderId = DEFAULT_DRIVE_FOLDER_ID;
+            }
+          } catch (e) {}
+        }
+        if (!currentConfig.driveFolderId) currentConfig.driveFolderId = DEFAULT_DRIVE_FOLDER_ID;
+        if (!currentConfig.galleryHeaderBg) currentConfig.galleryHeaderBg = DEFAULT_GALLERY_BG_URL;
+        currentConfig.scheduleOverride = 'auto';
+
+        if (!hasLockedSavedConfig) {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('event')) {
+            currentConfig.eventName = params.get('event');
+            currentConfig.eventSlug = currentConfig.eventName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'rafqa-production';
+            currentConfig.eventId = `RP-${currentConfig.eventSlug.toUpperCase()}`;
+          }
+          if (params.get('hashtag')) currentConfig.eventSubtitle = params.get('hashtag');
+          if (params.get('date') && /^\d{4}-\d{2}-\d{2}$/.test(params.get('date'))) {
+            currentConfig.eventDate = params.get('date');
+          }
+          if (params.get('pin')) currentConfig.pinCode = params.get('pin');
+          if (params.get('folder')) currentConfig.driveFolderId = params.get('folder');
+          if (params.get('bg')) currentConfig.galleryHeaderBg = params.get('bg');
+        }
+
+        syncFormInputs();
+        applyToDOM();
+        startStatusMonitor();
+      }
+
+      function syncFormInputs() {
+        document.getElementById('cfg-event-name').value = currentConfig.eventName;
+        document.getElementById('cfg-event-subtitle').value = currentConfig.eventSubtitle;
+        document.getElementById('cfg-event-date').value = currentConfig.eventDate;
+        document.getElementById('cfg-pin-code').value = currentConfig.pinCode || "";
+        document.getElementById('cfg-footer-text').value = currentConfig.footerText;
+        document.getElementById('cfg-show-name').checked = currentConfig.showEventName;
+        document.getElementById('cfg-show-hashtag').checked = currentConfig.showHashtag;
+        document.getElementById('cfg-show-date').checked = currentConfig.showDate;
+        document.getElementById('cfg-allow-download').checked = currentConfig.allowDownload;
+      }
+
+      function persistToStorage() {
+        try {
+          localStorage.setItem('rafqa_active_event_config', JSON.stringify(currentConfig));
+        } catch (e) {}
+      }
+
+      function liveUpdate() {
+        const todayIso = new Date().toISOString().split('T')[0];
+        currentConfig.eventName = document.getElementById('cfg-event-name').value || "Rafqa Photobooth";
+        currentConfig.eventSlug = currentConfig.eventName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'rafqa-production';
+        currentConfig.eventId = `RP-${currentConfig.eventSlug.toUpperCase()}`;
+        currentConfig.eventSubtitle = document.getElementById('cfg-event-subtitle').value;
+        currentConfig.eventDate = document.getElementById('cfg-event-date').value || todayIso;
+        currentConfig.pinCode = document.getElementById('cfg-pin-code').value.trim();
+        currentConfig.scheduleOverride = 'auto';
+        currentConfig.footerText = document.getElementById('cfg-footer-text').value;
+        currentConfig.showEventName = document.getElementById('cfg-show-name').checked;
+        currentConfig.showHashtag = document.getElementById('cfg-show-hashtag').checked;
+        currentConfig.showDate = document.getElementById('cfg-show-date').checked;
+        currentConfig.allowDownload = document.getElementById('cfg-allow-download').checked;
+
+        persistToStorage();
+        applyToDOM();
+        evaluate24HourStatus();
+        renderCustomizerPreview();
+      }
+
+      function saveConfig() {
+        liveUpdate();
+        App.toast('Pengaturan acara disimpan permanen!', 'success');
+      }
+
+      function resetConfig() {
+        localStorage.removeItem('rafqa_active_event_config');
+        currentConfig = {
+          ...DEFAULT_CONFIG,
+          eventDate: new Date().toISOString().split('T')[0]
+        };
+        syncFormInputs();
+        applyToDOM();
+        evaluate24HourStatus();
+        renderCustomizerPreview();
+        App.toast('Pengaturan acara telah dikosongkan dan di-reset ke awal.', 'info');
+      }
+
+      function getFormattedDate() {
+        if (!currentConfig.eventDate) return '';
+        const d = new Date(currentConfig.eventDate + 'T00:00:00');
+        return isNaN(d.getTime()) ? currentConfig.eventDate : d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      function applyToDOM() {
+        const formattedDate = getFormattedDate();
+        document.getElementById('booth-event-name').textContent = currentConfig.eventName;
+        document.getElementById('booth-event-meta').textContent = `${formattedDate} ${currentConfig.eventSubtitle ? '• ' + currentConfig.eventSubtitle : ''}`;
+        document.getElementById('gallery-title').textContent = `${currentConfig.eventName} Gallery`;
+        document.getElementById('footer-event-display').textContent = currentConfig.eventName;
+
+        const galHero = document.getElementById('gallery-hero-header');
+        if (galHero) {
+          const resolvedBg = normalizeImageUrl(currentConfig.galleryHeaderBg);
+          galHero.style.backgroundImage = `linear-gradient(to top, rgba(18, 15, 13, 0.90) 0%, rgba(36, 19, 5, 0.42) 100%), url('${resolvedBg}')`;
+        }
+
+        const dlBtn = document.getElementById('btn-download-photo');
+        if (dlBtn) dlBtn.style.display = currentConfig.allowDownload ? 'inline-flex' : 'none';
+      }
+
+      function getEventLifecycleState() {
+        if (currentConfig.scheduleOverride === 'force_live') {
+          return { status: 'LIVE_ACTIVE', remainingMs: 23 * 3600 * 1000 + 59 * 60 * 1000 };
+        }
+        if (currentConfig.scheduleOverride === 'force_upcoming') {
+          const target = Date.now() + 2 * 86400 * 1000;
+          return { status: 'UPCOMING', startsInMs: target - Date.now() };
+        }
+        if (currentConfig.scheduleOverride === 'force_archived') {
+          return { status: 'ARCHIVED', remainingMs: 0 };
+        }
+
+        const startAt = new Date(`${currentConfig.eventDate}T00:00:00+07:00`).getTime();
+        const closeAt = startAt + 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        if (isNaN(startAt) || (now >= startAt && now <= closeAt)) {
+          return { status: 'LIVE_ACTIVE', remainingMs: Math.max(0, closeAt - now) };
+        }
+        if (now < startAt) {
+          return { status: 'UPCOMING', startsInMs: startAt - now };
+        }
+        return { status: 'ARCHIVED', remainingMs: 0 };
+      }
+
+      function evaluate24HourStatus() {
+        const state = getEventLifecycleState();
+        const badge = document.getElementById('event-status-badge');
+        const timerText = document.getElementById('booth-timer-text');
+        const lockedSplash = document.getElementById('booth-locked-splash');
+        const activeStudio = document.getElementById('booth-active-studio');
+        const upcomingBox = document.getElementById('upcoming-countdown-box');
+        const galPill = document.getElementById('gal-status-pill');
+        const galSub = document.getElementById('gal-status-subtext');
+        const galCamBtn = document.getElementById('btn-gal-back-booth');
+
+        if (state.status === 'LIVE_ACTIVE') {
+          const hrs = Math.floor(state.remainingMs / 3600000);
+          const mins = Math.floor((state.remainingMs % 3600000) / 60000);
+          if (badge) {
+            badge.className = 'status-pill live';
+            badge.innerHTML = `<i class="ph-fill ph-record"></i> KAMERA AKTIF (24 JAM)`;
+          }
+          if (timerText) timerText.textContent = `Kamera aktif ${hrs} jam ${mins} menit lagi`;
+          if (lockedSplash) lockedSplash.style.display = 'none';
+          if (activeStudio) activeStudio.style.display = 'grid';
+          if (galPill) {
+            galPill.className = 'status-pill live';
+            galPill.textContent = `KAMERA AKTIF • TERSISA ${hrs}J ${mins}M`;
+          }
+          if (galSub) galSub.textContent = 'Sesi pemotretan sedang berlangsung. Ambil foto atau unduh arsip acara.';
+          if (galCamBtn) galCamBtn.style.display = 'inline-flex';
+        } else if (state.status === 'UPCOMING') {
+          const totalSec = Math.max(0, Math.floor(state.startsInMs / 1000));
+          const d = Math.floor(totalSec / 86400);
+          const h = Math.floor((totalSec % 86400) / 3600);
+          const m = Math.floor((totalSec % 3600) / 60);
+          const s = totalSec % 60;
+
+          if (badge) {
+            badge.className = 'status-pill upcoming';
+            badge.innerHTML = `<i class="ph-bold ph-clock"></i> BELUM DIMULAI`;
+          }
+          if (timerText) timerText.textContent = `Dibuka pada ${getFormattedDate()}`;
+          if (lockedSplash) lockedSplash.style.display = 'block';
+          if (activeStudio) activeStudio.style.display = 'none';
+          if (upcomingBox) upcomingBox.style.display = 'grid';
+          document.getElementById('splash-title').textContent = 'Sesi Photobooth Belum Dimulai';
+          document.getElementById('splash-desc').textContent = 'Kamera photobooth akan terbuka otomatis selama 24 jam penuh pada tanggal pelaksanaan acara.';
+          document.getElementById('cd-days').textContent = String(d).padStart(2, '0');
+          document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+          document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
+          document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
+        } else {
+          if (badge) {
+            badge.className = 'status-pill archived';
+            badge.innerHTML = `<i class="ph-bold ph-archive"></i> MODE ARSIP GALERI`;
+          }
+          if (timerText) timerText.textContent = 'Sesi kamera 24 jam telah berakhir';
+          if (lockedSplash) lockedSplash.style.display = 'block';
+          if (activeStudio) activeStudio.style.display = 'none';
+          if (upcomingBox) upcomingBox.style.display = 'none';
+          document.getElementById('splash-icon-box').innerHTML = `<i class="ph-bold ph-images"></i>`;
+          document.getElementById('splash-title').textContent = 'Sesi Pemotretan Acara Telah Selesai';
+          document.getElementById('splash-desc').textContent = 'Terima kasih telah hadir! Kamera telah dikunci otomatis, namun seluruh foto tetap dapat dilihat dan diunduh di galeri.';
+          if (galPill) {
+            galPill.className = 'status-pill archived';
+            galPill.textContent = 'MODE ARSIP GALERI (READ-ONLY)';
+          }
+          if (galSub) galSub.textContent = 'Sesi kamera 24 jam telah selesai. Silakan lihat dan unduh seluruh foto kenangan.';
+          if (galCamBtn) galCamBtn.style.display = 'none';
+        }
+
+        return state.status;
+      }
+
+      function startStatusMonitor() {
+        if (statusInterval) clearInterval(statusInterval);
+        statusInterval = setInterval(evaluate24HourStatus, 1000);
+      }
+
+      function renderCustomizerPreview() {
+        const canvas = document.getElementById('customizer-preview-canvas');
+        if (!canvas || typeof FrameModule === 'undefined' || typeof RendererModule === 'undefined') return;
+        RendererModule.composeFrame(canvas, [], FrameModule.getActiveFrame(), currentConfig, {}, true);
+      }
+
+      function get() { return currentConfig; }
+
+      return { init, get, liveUpdate, saveConfig, resetConfig, getFormattedDate, getEventLifecycleState, evaluate24HourStatus, renderCustomizerPreview };
+    })();
+
+
+    /**
+     * 1B. EVENT PIN PRIVACY GATE MODULE
+     */
+    const EventAccessModule = (() => {
+      function checkPinGate() {
+        const cfg = EventConfigModule.get();
+        if (!cfg.pinCode) return;
+        const verified = sessionStorage.getItem(`rafqa_pin_verified_${cfg.eventSlug}`);
+        if (verified !== cfg.pinCode) {
+          document.getElementById('pin-modal').classList.add('active');
+        }
+      }
+
+      function verifyPin(e) {
+        e.preventDefault();
+        const cfg = EventConfigModule.get();
+        const val = document.getElementById('pin-input-field').value.trim();
+        if (val === cfg.pinCode) {
+          sessionStorage.setItem(`rafqa_pin_verified_${cfg.eventSlug}`, cfg.pinCode);
+          document.getElementById('pin-modal').classList.remove('active');
+          App.toast('PIN terverifikasi! Selamat datang di acara.', 'success');
+        } else {
+          App.toast('Kode PIN tidak sesuai.', 'error');
+        }
+      }
+
+      return { checkPinGate, verifyPin };
+    })();
+
+
+    /**
+     * 2. FILTER MODULE
+     */
+    const FilterModule = (() => {
+      const FILTERS = [
+        { id: 'original', name: 'Normal', css: 'none', swatch: 'linear-gradient(135deg, #FAF6EE, #D8C7A8)' },
+        { id: 'dazz_disp', name: 'Dazz Disposable', css: 'contrast(1.22) saturate(1.28) sepia(0.16) brightness(1.05)', dazz: true, grain: true, timestamp: true, swatch: 'linear-gradient(135deg, #F97316, #3B230E)' },
+        { id: 'warm_film', name: 'Warm Film', css: 'sepia(0.22) saturate(1.22) contrast(1.06) brightness(1.03)', swatch: 'linear-gradient(135deg, #FDBA74, #8C6239)' },
+        { id: 'golden', name: 'Golden Hour', css: 'contrast(1.1) saturate(1.3) hue-rotate(-7deg) brightness(1.05)', swatch: 'linear-gradient(135deg, #FB923C, #54351A)' },
+        { id: 'bw', name: 'Noir B&W', css: 'grayscale(1) contrast(1.25)', swatch: 'linear-gradient(135deg, #FFFFFF, #120F0D)' },
+        { id: 'fisheye', name: 'Fisheye 2mm', css: 'contrast(1.12) saturate(1.16)', fisheye: true, swatch: 'radial-gradient(circle, #FAF6EE 25%, #120F0D 92%)' }
+      ];
+
+      let activeFilterId = 'original';
+
+      function init() {
+        const container = document.getElementById('filter-list-container');
+        const selectEl = document.getElementById('preview-filter-select');
+        container.innerHTML = '';
+        selectEl.innerHTML = '';
+
+        FILTERS.forEach(f => {
+          const btn = document.createElement('button');
+          btn.className = `filter-chip ${f.id === activeFilterId ? 'active' : ''}`;
+          btn.dataset.filterId = f.id;
+          btn.onclick = () => select(f.id);
+          btn.innerHTML = `<div class="filter-swatch" style="background: ${f.swatch};"></div><span>${f.name}</span>`;
+          container.appendChild(btn);
+
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = f.name;
+          selectEl.appendChild(opt);
+        });
+      }
+
+      function select(id) {
+        activeFilterId = id;
+        document.querySelectorAll('.filter-chip').forEach(el => {
+          el.classList.toggle('active', el.dataset.filterId === id);
+        });
+        const sel = document.getElementById('preview-filter-select');
+        if (sel) sel.value = id;
+      }
+
+      function getActive() { return FILTERS.find(f => f.id === activeFilterId) || FILTERS[0]; }
+      function getById(id) { return FILTERS.find(f => f.id === id) || FILTERS[0]; }
+
+      function applyFilterToCanvas(sourceElement, targetCanvas, filterObj, mirror = false) {
+        const ctx = targetCanvas.getContext('2d');
+        const w = targetCanvas.width;
+        const h = targetCanvas.height;
+
+        ctx.save();
+        ctx.clearRect(0, 0, w, h);
+        if (mirror) {
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.filter = filterObj.css || 'none';
+        ctx.drawImage(sourceElement, 0, 0, w, h);
+        ctx.restore();
+
+        if (filterObj.dazz) {
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          const leak = ctx.createLinearGradient(0, 0, w * 0.3, h * 0.4);
+          leak.addColorStop(0, 'rgba(249, 115, 22, 0.35)');
+          leak.addColorStop(1, 'rgba(249, 115, 22, 0)');
+          ctx.fillStyle = leak;
+          ctx.fillRect(0, 0, w * 0.35, h);
+          ctx.restore();
+        }
+
+        if (filterObj.fisheye) {
+          applyFisheyeConvexDistortion(ctx, w, h);
+        }
+
+        if (filterObj.timestamp) {
+          drawDisposableTimestamp(ctx, w, h);
+        }
+      }
+
+      function getDisposableTimestampText() {
+        const now = new Date();
+        return `'${String(now.getFullYear()).slice(-2)} ${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getDate()).padStart(2, '0')}`;
+      }
+
+      function drawDisposableTimestamp(ctx, boxW, boxH, offsetX = 0, offsetY = 0) {
+        ctx.save();
+        const fontSize = Math.max(11, Math.min(22, Math.floor(Math.min(boxW, boxH) * 0.042)));
+        ctx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
+        ctx.fillStyle = '#FB923C';
+        ctx.shadowColor = 'rgba(18, 15, 13, 0.92)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'bottom';
+
+        const padX = Math.max(10, boxW * 0.055);
+        const padY = Math.max(8, boxH * 0.055);
+        ctx.fillText(getDisposableTimestampText(), offsetX + boxW - padX, offsetY + boxH - padY);
+        ctx.restore();
+      }
+
+      function applyFisheyeConvexDistortion(ctx, w, h) {
+        const srcData = ctx.getImageData(0, 0, w, h);
+        const dstData = ctx.createImageData(w, h);
+        const src = srcData.data;
+        const dst = dstData.data;
+        const cx = w / 2, cy = h / 2;
+        const normR = Math.min(w, h) * 0.52;
+        const k1 = 0.62;
+        const k2 = 0.24;
+        const zoom = 1.18;
+
+        for (let y = 0; y < h; y++) {
+          const dy = (y - cy) / normR;
+          const dy2 = dy * dy;
+          for (let x = 0; x < w; x++) {
+            const dx = (x - cx) / normR;
+            const r2 = dx * dx + dy2;
+            const barrel = (1 + k1 * r2 + k2 * r2 * r2) / zoom;
+
+            const srcX = Math.round(cx + dx * barrel * normR);
+            const srcY = Math.round(cy + dy * barrel * normR);
+            const dstIdx = (y * w + x) * 4;
+
+            if (srcX >= 0 && srcX < w && srcY >= 0 && srcY < h) {
+              const srcIdx = (srcY * w + srcX) * 4;
+              const edgeVig = Math.max(0.72, 1 - Math.max(0, r2 - 0.85) * 0.14);
+              dst[dstIdx] = src[srcIdx] * edgeVig;
+              dst[dstIdx + 1] = src[srcIdx + 1] * edgeVig;
+              dst[dstIdx + 2] = src[srcIdx + 2] * edgeVig;
+              dst[dstIdx + 3] = 255;
+            } else {
+              dst[dstIdx] = 18;
+              dst[dstIdx + 1] = 15;
+              dst[dstIdx + 2] = 13;
+              dst[dstIdx + 3] = 255;
+            }
+          }
+        }
+        ctx.putImageData(dstData, 0, 0);
+      }
+
+      return { init, select, getActive, getById, applyFilterToCanvas, drawDisposableTimestamp };
+    })();
+
+
+    /**
+     * 3. FRAME TEMPLATE MODULE
+     */
+    const FrameModule = (() => {
+      const TEMPLATES = [
+        // 1 PHOTO (SINGLE)
+        { id: 'single_none', name: 'Tanpa Frame', style: 'Foto Polos Asli', count: 1, layout: 'single_1', pattern: 'none', bg: '#FFFFFF', fg: '#1A1614', accent: '#1A1614', slotShape: 'rect' },
+        { id: 'single_floral_blush', name: 'Blossom Floral', style: 'Bunga Pastel Lembut', count: 1, layout: 'single_1', pattern: 'floral', bg: '#FDF6F0', fg: '#3B230E', accent: '#D97757', flowerColors: ['#F4A261', '#E76F51', '#E9C46A', '#8AB17D'], slotShape: 'arch' },
+        { id: 'single_floral_garden', name: 'Botanical Sage', style: 'Bunga & Daun Taman', count: 1, layout: 'single_1', pattern: 'floral', bg: '#F2F5F0', fg: '#233326', accent: '#588157', flowerColors: ['#F28482', '#F5CAC3', '#F6BD60', '#84A59D'], slotShape: 'rect' },
+        { id: 'single_polka_orange', name: 'Tangerine Polka', style: 'Polkadot Hangat', count: 1, layout: 'single_1', pattern: 'polkadot', bg: '#F97316', fg: '#FAF6EE', accent: '#FFF3E0', dotColor: '#FAF6EE', slotShape: 'rect' },
+        { id: 'single_chocolate', name: 'Chocolate Gold', style: 'Coklat Tua Elegan', count: 1, layout: 'single_1', pattern: 'minimal', bg: '#3B230E', fg: '#FAF6EE', accent: '#FDBA74', slotShape: 'rect' },
+        { id: 'single_arch_cream', name: 'Mocha Arch', style: 'Kubah Minimalis', count: 1, layout: 'single_1', pattern: 'arch_border', bg: '#765233', fg: '#FAF6EE', accent: '#FDBA74', slotShape: 'arch' },
+
+        // 2 PHOTOS (DUO)
+        { id: 'duo_none', name: 'Tanpa Frame', style: 'Kolase Polos', count: 2, layout: 'vertical_2', pattern: 'none', bg: '#FFFFFF', fg: '#1A1614', accent: '#1A1614', slotShape: 'rect' },
+        { id: 'duo_floral_rose', name: 'Rose Garden Duo', style: 'Bunga Mawar Hangat', count: 2, layout: 'vertical_2', pattern: 'floral', bg: '#FFF8F4', fg: '#4A2518', accent: '#E07A5F', flowerColors: ['#E07A5F', '#F2CC8F', '#F4A261', '#81B29A'], slotShape: 'arch' },
+        { id: 'duo_floral_daisy', name: 'Golden Daisy', style: 'Bunga Aster Krim', count: 2, layout: 'vertical_2', pattern: 'floral', bg: '#FAF6EE', fg: '#3B230E', accent: '#D97706', flowerColors: ['#FBBF24', '#F97316', '#FDE68A', '#65A30D'], slotShape: 'rect' },
+        { id: 'duo_polka_cocoa', name: 'Espresso Polka', style: 'Polkadot Oren', count: 2, layout: 'vertical_2', pattern: 'polkadot', bg: '#241305', fg: '#FAF6EE', accent: '#FB923C', dotColor: '#F97316', slotShape: 'rect' },
+        { id: 'duo_tangerine', name: 'Soft Tangerine', style: 'Oren Bersih', count: 2, layout: 'vertical_2', pattern: 'minimal', bg: '#FB923C', fg: '#FAF6EE', accent: '#FFF7ED', slotShape: 'rect' },
+        { id: 'duo_checker', name: 'Biscuit Checker', style: 'Kotak Lembut', count: 2, layout: 'vertical_2', pattern: 'checker', bg: '#F4EDE0', fg: '#3B230E', accent: '#A47551', slotShape: 'rect' },
+
+        // 3 PHOTOS (STRIP)
+        { id: 'strip_none', name: 'Tanpa Frame', style: 'Strip Polos', count: 3, layout: 'vertical_3', pattern: 'none', bg: '#FFFFFF', fg: '#1A1614', accent: '#1A1614', slotShape: 'rect' },
+        { id: 'strip_floral_blossom', name: 'Sakura & Peach', style: 'Bunga Mekar Lembut', count: 3, layout: 'vertical_3', pattern: 'floral', bg: '#FFF7F2', fg: '#3B230E', accent: '#E76F51', flowerColors: ['#F4A261', '#E76F51', '#F8AD9D', '#8AB17D'], slotShape: 'arch' },
+        { id: 'strip_floral_botanical', name: 'Wildflower Cream', style: 'Bunga Taman Klasik', count: 3, layout: 'vertical_3', pattern: 'floral', bg: '#FAF6EE', fg: '#2C362B', accent: '#606C38', flowerColors: ['#DDA15E', '#BC6C25', '#E9C46A', '#606C38'], slotShape: 'rect' },
+        { id: 'strip_chocolate', name: 'Chocolate Gold', style: 'Coklat Tua Klasik', count: 3, layout: 'vertical_3', pattern: 'minimal', bg: '#3B230E', fg: '#FAF6EE', accent: '#FDBA74', slotShape: 'rect' },
+        { id: 'strip_polka_bold', name: 'Polkadot Pop', style: 'Polkadot Kontras', count: 3, layout: 'vertical_3', pattern: 'polkadot', bg: '#F4EDE0', fg: '#241305', accent: '#EA580C', dotColor: '#EA580C', slotShape: 'rect' },
+        { id: 'strip_checker', name: 'Cocoa Checker', style: 'Papan Catur Rapi', count: 3, layout: 'vertical_3', pattern: 'checker', bg: '#FAF6EE', fg: '#3B230E', accent: '#8C6239', slotShape: 'rect' },
+
+        // 4 PHOTOS (GRID 2x2)
+        { id: 'grid4_none', name: 'Tanpa Frame', style: 'Grid Polos', count: 4, layout: 'grid_2x2', pattern: 'none', bg: '#FFFFFF', fg: '#1A1614', accent: '#1A1614', slotShape: 'rect' },
+        { id: 'grid4_floral_peach', name: 'Peach Blossom', style: 'Bunga Peach Rapi', count: 4, layout: 'grid_2x2', pattern: 'floral', bg: '#FDF6EE', fg: '#3B230E', accent: '#E07A5F', flowerColors: ['#F4A261', '#E07A5F', '#F2CC8F', '#81B29A'], slotShape: 'arch' },
+        { id: 'grid4_floral_olive', name: 'Garden Meadow', style: 'Bunga & Daun Hijau', count: 4, layout: 'grid_2x2', pattern: 'floral', bg: '#F4F6F0', fg: '#283618', accent: '#606C38', flowerColors: ['#F28482', '#F6BD60', '#F5CAC3', '#606C38'], slotShape: 'rect' },
+        { id: 'grid4_polka', name: 'Tangerine Polka', style: 'Polkadot Ceria', count: 4, layout: 'grid_2x2', pattern: 'polkadot', bg: '#F97316', fg: '#FAF6EE', accent: '#FFF7ED', dotColor: '#FAF6EE', slotShape: 'rect' },
+        { id: 'grid4_chocolate', name: 'Chocolate Gold', style: 'Coklat Pekat', count: 4, layout: 'grid_2x2', pattern: 'minimal', bg: '#241305', fg: '#FAF6EE', accent: '#FDBA74', slotShape: 'rect' },
+        { id: 'grid4_checker', name: 'Cocoa Checker', style: 'Kotak Catur Rapi', count: 4, layout: 'grid_2x2', pattern: 'checker', bg: '#FAF6EE', fg: '#3B230E', accent: '#8C6239', slotShape: 'rect' },
+
+        // 6 PHOTOS (GRID 2x3)
+        { id: 'grid6_none', name: 'Tanpa Frame', style: 'Kolase 6 Polos', count: 6, layout: 'grid_2x3', pattern: 'none', bg: '#FFFFFF', fg: '#1A1614', accent: '#1A1614', slotShape: 'rect' },
+        { id: 'grid6_floral_bloom', name: 'Spring Bouquet 6', style: 'Bunga Mekar 6 Pose', count: 6, layout: 'grid_2x3', pattern: 'floral', bg: '#FFF8F3', fg: '#3B230E', accent: '#D97757', flowerColors: ['#F4A261', '#E76F51', '#E9C46A', '#8AB17D'], slotShape: 'rect' },
+        { id: 'grid6_polka', name: 'Polkadot Fiesta 6', style: 'Polkadot Kontras', count: 6, layout: 'grid_2x3', pattern: 'polkadot', bg: '#F4EDE0', fg: '#241305', accent: '#EA580C', dotColor: '#EA580C', slotShape: 'rect' },
+        { id: 'grid6_chocolate', name: 'Chocolate Gold 6', style: 'Coklat Tua', count: 6, layout: 'grid_2x3', pattern: 'minimal', bg: '#3B230E', fg: '#FAF6EE', accent: '#FDBA74', slotShape: 'rect' },
+        { id: 'grid6_checker', name: 'Cocoa Checker 6', style: 'Kotak Catur', count: 6, layout: 'grid_2x3', pattern: 'checker', bg: '#FAF6EE', fg: '#3B230E', accent: '#8C6239', slotShape: 'rect' }
+      ];
+
+      let selectedPoseCount = 3;
+      let activeFrameId = 'strip_floral_blossom';
+
+      function init() {
+        setPoseCount(3);
+      }
+
+      function setPoseCount(count) {
+        selectedPoseCount = Number(count);
+        document.querySelectorAll('.pose-mode-btn').forEach(btn => {
+          btn.classList.toggle('active', Number(btn.dataset.count) === selectedPoseCount);
+        });
+
+        const matching = getFramesByCount(selectedPoseCount);
+        if (!matching.some(t => t.id === activeFrameId) && matching.length > 0) {
+          activeFrameId = matching[0].id;
+        }
+
+        const labelText = selectedPoseCount === 1 ? 'Single (1 Foto)' : `${selectedPoseCount} Foto`;
+        const lblEl = document.getElementById('active-frame-label');
+        if (lblEl) lblEl.textContent = labelText;
+
+        if (typeof CaptureModule !== 'undefined') {
+          CaptureModule.syncSlotCount(selectedPoseCount);
+        }
+        EventConfigModule.renderCustomizerPreview();
+      }
+
+      function select(frameId) {
+        activeFrameId = frameId;
+        const frame = getActiveFrame();
+        selectedPoseCount = frame.count;
+        EventConfigModule.renderCustomizerPreview();
+      }
+
+      function getActiveFrame() { return TEMPLATES.find(t => t.id === activeFrameId) || TEMPLATES[0]; }
+      function getFramesByCount(count) { return TEMPLATES.filter(t => t.count === Number(count)); }
+      function getPoseCount() { return selectedPoseCount; }
+
+      return { init, setPoseCount, select, getActiveFrame, getFramesByCount, getPoseCount };
+    })();
+
+
+    /**
+     * 4. CAMERA MODULE (DENGAN COVER CROP OTOMATIS AGAR TIDAK GEPENG DI MOBILE)
+     */
+    const CameraModule = (() => {
+      let stream = null;
+      let facingMode = 'user';
+      let isMirrored = true;
+      let flashOn = false;
+      let animFrameId = null;
+
+      const videoEl = document.getElementById('camera-video');
+      const canvasEl = document.getElementById('camera-preview-canvas');
+      const stateMsgEl = document.getElementById('camera-state-msg');
+
+      function drawVideoCoverToCanvas(video, targetCanvas, mirror = false) {
+        const vw = video.videoWidth || 1280;
+        const vh = video.videoHeight || 960;
+        const cw = targetCanvas.width;
+        const ch = targetCanvas.height;
+
+        const videoRatio = vw / vh;
+        const canvasRatio = cw / ch;
+        let sx = 0, sy = 0, sw = vw, sh = vh;
+
+        if (videoRatio > canvasRatio) {
+          sh = vh;
+          sw = vh * canvasRatio;
+          sx = (vw - sw) / 2;
+        } else {
+          sw = vw;
+          sh = vw / canvasRatio;
+          sy = (vh - sh) / 2;
+        }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cw;
+        tempCanvas.height = ch;
+        const tCtx = tempCanvas.getContext('2d');
+        tCtx.drawImage(video, sx, sy, sw, sh, 0, 0, cw, ch);
+
+        FilterModule.applyFilterToCanvas(tempCanvas, targetCanvas, FilterModule.getActive(), mirror);
+      }
+
+      async function start() {
+        if (EventConfigModule.getEventLifecycleState().status !== 'LIVE_ACTIVE') return;
+
+        stop();
+        stateMsgEl.style.display = 'flex';
+        document.getElementById('camera-msg-text').textContent = 'Mengakses kamera...';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          document.getElementById('camera-msg-text').textContent = 'Browser tidak mendukung kamera langsung.';
+          return;
+        }
+
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: false
+          });
+          videoEl.srcObject = stream;
+          await videoEl.play();
+          canvasEl.width = 800;
+          canvasEl.height = 600;
+          stateMsgEl.style.display = 'none';
+          startRenderLoop();
+        } catch (err) {
+          document.getElementById('camera-msg-text').textContent = 'Izin kamera tidak aktif. Gunakan Mode Simulasi untuk mencoba.';
+        }
+      }
+
+      function stop() {
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
+      }
+
+      function startRenderLoop() {
+        const render = () => {
+          if (videoEl.readyState >= 2) {
+            drawVideoCoverToCanvas(videoEl, canvasEl, isMirrored);
+          }
+          animFrameId = requestAnimationFrame(render);
+        };
+        render();
+      }
+
+      async function switchCamera() {
+        facingMode = facingMode === 'user' ? 'environment' : 'user';
+        isMirrored = facingMode === 'user';
+        await start();
+      }
+
+      function toggleMirror() {
+        isMirrored = !isMirrored;
+        App.toast(isMirrored ? 'Mirror aktif' : 'Mirror nonaktif');
+      }
+
+      async function toggleFlash() {
+        if (!stream) return App.toast('Kamera belum aktif', 'error');
+        const track = stream.getVideoTracks()[0];
+        const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+        if (!caps.torch) return App.toast('Flash tidak didukung pada perangkat ini', 'error');
+        flashOn = !flashOn;
+        await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+        const btn = document.getElementById('btn-flash');
+        btn.classList.toggle('active', flashOn);
+        btn.innerHTML = flashOn
+          ? `<i class="ph-bold ph-lightning"></i> <span>Flash ON</span>`
+          : `<i class="ph-bold ph-lightning-slash"></i> <span>Flash OFF</span>`;
+      }
+
+      function isReady() { return stream && videoEl.readyState >= 2; }
+
+      function getRawSnapshotCanvas() {
+        const rawCanvas = document.createElement('canvas');
+        rawCanvas.width = 800;
+        rawCanvas.height = 600;
+
+        const vw = videoEl.videoWidth || 800;
+        const vh = videoEl.videoHeight || 600;
+        const videoRatio = vw / vh;
+        const targetRatio = 800 / 600;
+        let sx = 0, sy = 0, sw = vw, sh = vh;
+
+        if (videoRatio > targetRatio) {
+          sh = vh;
+          sw = vh * targetRatio;
+          sx = (vw - sw) / 2;
+        } else {
+          sw = vw;
+          sh = vw / targetRatio;
+          sy = (vh - sh) / 2;
+        }
+
+        const ctx = rawCanvas.getContext('2d');
+        if (isMirrored) {
+          ctx.translate(rawCanvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, rawCanvas.width, rawCanvas.height);
+        return rawCanvas;
+      }
+
+      return { start, stop, switchCamera, toggleMirror, toggleFlash, isReady, getRawSnapshotCanvas };
+    })();
+
+
+    /**
+     * 5. CAPTURE & MULTI-POSE STRIP SEQUENCE MODULE
+     */
+    const CaptureModule = (() => {
+      let slots = [];
+      let isCountingDown = false;
+      let targetRetakeIndex = null;
+
+      function syncSlotCount(requiredCount) {
+        if (slots.length > requiredCount) slots = slots.slice(0, requiredCount);
+        renderSlotsUI();
+      }
+
+      function renderSlotsUI() {
+        const frame = FrameModule.getActiveFrame();
+        const total = frame.count;
+        const filledCount = slots.filter(Boolean).length;
+
+        document.getElementById('slot-progress-text').textContent = `${filledCount} / ${total}`;
+
+        const dotsContainer = document.getElementById('slot-dots-container');
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const dot = document.createElement('div');
+          dot.className = `slot-dot ${slots[i] ? 'filled' : ''}`;
+          dotsContainer.appendChild(dot);
+        }
+
+        const grid = document.getElementById('captured-slots-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const box = document.createElement('div');
+          box.className = 'slot-box';
+          if (slots[i]) {
+            box.innerHTML = `
+              <img src="${slots[i].filteredDataUrl}" alt="Pose ${i + 1}" />
+              <button class="slot-retake-btn" onclick="CaptureModule.retakeSlot(${i})">Ulang</button>
+            `;
+          } else {
+            box.innerHTML = `<span>#${i + 1}</span>`;
+          }
+          grid.appendChild(box);
+        }
+
+        document.getElementById('btn-proceed-preview').disabled = filledCount < total;
+      }
+
+      async function triggerCapture() {
+        if (isCountingDown) return;
+        const frame = FrameModule.getActiveFrame();
+
+        if (targetRetakeIndex !== null) {
+          await runSinglePoseSequence(targetRetakeIndex);
+          targetRetakeIndex = null;
+          return;
+        }
+
+        const firstEmpty = slots.findIndex(s => !s);
+        const startIdx = firstEmpty !== -1 ? firstEmpty : slots.length;
+        if (startIdx >= frame.count) {
+          App.toast('Semua pose terisi! Klik Review untuk menyimpan.');
+          return;
+        }
+
+        for (let idx = startIdx; idx < frame.count; idx++) {
+          if (slots[idx]) continue;
+          await runSinglePoseSequence(idx);
+        }
+      }
+
+      function runSinglePoseSequence(slotIdx) {
+        return new Promise((resolve) => {
+          if (!CameraModule.isReady()) {
+            useDemoPhoto(slotIdx);
+            resolve();
+            return;
+          }
+          runCountdown(3, () => {
+            captureNow(slotIdx);
+            resolve();
+          });
+        });
+      }
+
+      function runCountdown(seconds, onComplete) {
+        isCountingDown = true;
+        const overlay = document.getElementById('countdown-overlay');
+        const numEl = document.getElementById('countdown-number');
+        overlay.style.display = 'flex';
+        let current = seconds;
+        numEl.textContent = current;
+
+        const timer = setInterval(() => {
+          current--;
+          if (current > 0) {
+            numEl.textContent = current;
+          } else {
+            clearInterval(timer);
+            overlay.style.display = 'none';
+            isCountingDown = false;
+            onComplete();
+          }
+        }, 800);
+      }
+
+      function captureNow(slotIdx) {
+        const flashEl = document.getElementById('shutter-flash');
+        flashEl.style.opacity = '0.95';
+        setTimeout(() => { flashEl.style.opacity = '0'; }, 150);
+
+        const rawCanvas = CameraModule.getRawSnapshotCanvas();
+        const activeFilter = FilterModule.getActive();
+        const filteredCanvas = document.createElement('canvas');
+        filteredCanvas.width = rawCanvas.width;
+        filteredCanvas.height = rawCanvas.height;
+        FilterModule.applyFilterToCanvas(rawCanvas, filteredCanvas, activeFilter, false);
+
+        const cleanFilterObj = activeFilter.timestamp ? { ...activeFilter, timestamp: false } : activeFilter;
+        const frameReadyCanvas = document.createElement('canvas');
+        frameReadyCanvas.width = rawCanvas.width;
+        frameReadyCanvas.height = rawCanvas.height;
+        FilterModule.applyFilterToCanvas(rawCanvas, frameReadyCanvas, cleanFilterObj, false);
+
+        slots[slotIdx] = {
+          rawDataUrl: rawCanvas.toDataURL('image/jpeg', 0.92),
+          filteredDataUrl: filteredCanvas.toDataURL('image/jpeg', 0.92),
+          frameReadyDataUrl: frameReadyCanvas.toDataURL('image/jpeg', 0.92),
+          filterId: activeFilter.id
+        };
+        renderSlotsUI();
+      }
+
+      function useDemoPhoto(specificIdx = null) {
+        const frame = FrameModule.getActiveFrame();
+        let slotIdx = specificIdx !== null ? specificIdx : slots.findIndex(s => !s);
+        if (slotIdx === -1) slotIdx = slots.length < frame.count ? slots.length : 0;
+
+        const demoCanvas = document.createElement('canvas');
+        demoCanvas.width = 800;
+        demoCanvas.height = 600;
+        const ctx = demoCanvas.getContext('2d');
+
+        const grad = ctx.createLinearGradient(0, 0, 800, 600);
+        grad.addColorStop(0, '#F4EDE0');
+        grad.addColorStop(1, '#8C6239');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 800, 600);
+
+        ctx.fillStyle = '#1A1614';
+        ctx.font = 'bold 34px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Pose #${slotIdx + 1} • Rafqa Production`, 400, 310);
+
+        const activeFilter = FilterModule.getActive();
+        const filteredCanvas = document.createElement('canvas');
+        filteredCanvas.width = 800;
+        filteredCanvas.height = 600;
+        FilterModule.applyFilterToCanvas(demoCanvas, filteredCanvas, activeFilter, false);
+
+        const cleanFilterObj = activeFilter.timestamp ? { ...activeFilter, timestamp: false } : activeFilter;
+        const frameReadyCanvas = document.createElement('canvas');
+        frameReadyCanvas.width = 800;
+        frameReadyCanvas.height = 600;
+        FilterModule.applyFilterToCanvas(demoCanvas, frameReadyCanvas, cleanFilterObj, false);
+
+        slots[slotIdx] = {
+          rawDataUrl: demoCanvas.toDataURL('image/jpeg', 0.92),
+          filteredDataUrl: filteredCanvas.toDataURL('image/jpeg', 0.92),
+          frameReadyDataUrl: frameReadyCanvas.toDataURL('image/jpeg', 0.92),
+          filterId: activeFilter.id
+        };
+        renderSlotsUI();
+      }
+
+      function retakeSlot(index) {
+        slots[index] = null;
+        targetRetakeIndex = index;
+        renderSlotsUI();
+        App.toast(`Tekan tombol kamera untuk foto ulang pose #${index + 1}`);
+      }
+
+      function resetAll() {
+        slots = [];
+        targetRetakeIndex = null;
+        renderSlotsUI();
+      }
+
+      function retakeFromPreview() {
+        resetAll();
+        App.navigate('booth');
+      }
+
+      function getSlots() { return slots; }
+
+      return { syncSlotCount, renderSlotsUI, triggerCapture, useDemoPhoto, retakeSlot, resetAll, retakeFromPreview, getSlots };
+    })();
+
+
+    /**
+     * 6. RENDERER MODULE
+     */
+    const RendererModule = (() => {
+      function loadImage(src) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      }
+
+      function drawRoundRectPath(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function drawArchPath(ctx, x, y, w, h) {
+        const archR = Math.min(w / 2, h * 0.42);
+        const bottomR = 14;
+        ctx.beginPath();
+        ctx.moveTo(x, y + h - bottomR);
+        ctx.lineTo(x, y + archR);
+        ctx.arcTo(x, y, x + archR, y, archR);
+        ctx.lineTo(x + w - archR, y);
+        ctx.arcTo(x + w, y, x + w, y + archR, archR);
+        ctx.lineTo(x + w, y + h - bottomR);
+        ctx.arcTo(x + w, y + h, x + w - bottomR, y + h, bottomR);
+        ctx.lineTo(x + bottomR, y + h);
+        ctx.arcTo(x, y + h, x, y + h - bottomR, bottomR);
+        ctx.closePath();
+      }
+
+      function drawBotanicalLeaf(ctx, cx, cy, angle, length, width, color) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(length * 0.5, -width, length, 0);
+        ctx.quadraticCurveTo(length * 0.5, width, 0, 0);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawFlowerBlossom(ctx, cx, cy, radius, petalColor, centerColor, petals = 6) {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = petalColor;
+        for (let i = 0; i < petals; i++) {
+          ctx.save();
+          ctx.rotate((Math.PI * 2 * i) / petals);
+          ctx.beginPath();
+          ctx.ellipse(0, -radius * 0.58, radius * 0.34, radius * 0.54, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.fillStyle = centerColor;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawFloralDecorations(ctx, width, height, colors) {
+        const [c1, c2, c3, leafColor] = colors || ['#F4A261', '#E76F51', '#E9C46A', '#8AB17D'];
+
+        drawBotanicalLeaf(ctx, 28, 56, -0.35, 74, 18, leafColor);
+        drawBotanicalLeaf(ctx, 48, 34, 0.45, 68, 16, leafColor);
+        drawBotanicalLeaf(ctx, 22, 92, 0.85, 58, 14, leafColor);
+        drawFlowerBlossom(ctx, 44, 48, 28, c1, '#FFF8E7', 6);
+        drawFlowerBlossom(ctx, 84, 34, 19, c2, '#FFF8E7', 5);
+        drawFlowerBlossom(ctx, 34, 92, 20, c3, '#FFFFFF', 6);
+
+        drawBotanicalLeaf(ctx, width - 28, 56, Math.PI + 0.35, 74, 18, leafColor);
+        drawBotanicalLeaf(ctx, width - 48, 34, Math.PI - 0.45, 68, 16, leafColor);
+        drawBotanicalLeaf(ctx, width - 22, 92, Math.PI - 0.85, 58, 14, leafColor);
+        drawFlowerBlossom(ctx, width - 44, 48, 28, c2, '#FFF8E7', 6);
+        drawFlowerBlossom(ctx, width - 84, 34, 19, c3, '#FFFFFF', 5);
+        drawFlowerBlossom(ctx, width - 34, 92, 20, c1, '#FFF8E7', 6);
+
+        drawBotanicalLeaf(ctx, 28, height - 56, 0.35, 76, 18, leafColor);
+        drawBotanicalLeaf(ctx, 52, height - 32, -0.45, 70, 16, leafColor);
+        drawBotanicalLeaf(ctx, 24, height - 96, -0.85, 58, 14, leafColor);
+        drawFlowerBlossom(ctx, 46, height - 48, 30, c2, '#FFF8E7', 6);
+        drawFlowerBlossom(ctx, 88, height - 34, 20, c1, '#FFF8E7', 5);
+        drawFlowerBlossom(ctx, 34, height - 94, 21, c3, '#FFFFFF', 6);
+
+        drawBotanicalLeaf(ctx, width - 28, height - 56, Math.PI - 0.35, 76, 18, leafColor);
+        drawBotanicalLeaf(ctx, width - 52, height - 32, Math.PI + 0.45, 70, 16, leafColor);
+        drawBotanicalLeaf(ctx, width - 24, height - 96, Math.PI + 0.85, 58, 14, leafColor);
+        drawFlowerBlossom(ctx, width - 46, height - 48, 30, c1, '#FFF8E7', 6);
+        drawFlowerBlossom(ctx, width - 88, height - 34, 20, c3, '#FFFFFF', 5);
+        drawFlowerBlossom(ctx, width - 34, height - 94, 21, c2, '#FFF8E7', 6);
+
+        drawBotanicalLeaf(ctx, 18, height * 0.48, -0.4, 48, 12, leafColor);
+        drawFlowerBlossom(ctx, 26, height * 0.48, 16, c3, '#FFFFFF', 5);
+        drawBotanicalLeaf(ctx, width - 18, height * 0.52, Math.PI + 0.4, 48, 12, leafColor);
+        drawFlowerBlossom(ctx, width - 26, height * 0.52, 16, c1, '#FFF8E7', 5);
+      }
+
+      async function composeFrame(targetCanvas, slotDataArray, frameTemplate, eventConfig, guestMeta = {}, isSimulation = false) {
+        const ctx = targetCanvas.getContext('2d');
+        const isNoFrame = frameTemplate.pattern === 'none';
+        const isStrip = frameTemplate.layout === 'vertical_3' || frameTemplate.layout === 'vertical_2';
+        const isSingle = frameTemplate.layout === 'single_1';
+
+        if (isNoFrame) {
+          const pad = isSingle ? 0 : 12;
+          const gap = isSingle ? 0 : 12;
+          let cols = 2, rows = 2;
+          if (isSingle) { cols = 1; rows = 1; }
+          else if (frameTemplate.layout === 'vertical_2') { cols = 1; rows = 2; }
+          else if (frameTemplate.layout === 'vertical_3') { cols = 1; rows = 3; }
+          else if (frameTemplate.layout === 'grid_2x3') { cols = 2; rows = 3; }
+
+          const width = isSingle ? 960 : (isStrip ? 720 : 1080);
+          const cellW = (width - pad * 2 - gap * (cols - 1)) / cols;
+          const cellH = Math.round(cellW * 0.75);
+          const height = pad * 2 + rows * cellH + (rows - 1) * gap;
+
+          targetCanvas.width = width;
+          targetCanvas.height = height;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+
+          for (let i = 0; i < frameTemplate.count; i++) {
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            const x = pad + c * (cellW + gap);
+            const y = pad + r * (cellH + gap);
+
+            ctx.fillStyle = '#E8DEC8';
+            ctx.fillRect(x, y, cellW, cellH);
+
+            if (!isSimulation && slotDataArray[i]) {
+              const slotFilter = FilterModule.getById(slotDataArray[i].filterId || FilterModule.getActive().id);
+              const imgSrc = (slotFilter.timestamp && slotDataArray[i].frameReadyDataUrl)
+                ? slotDataArray[i].frameReadyDataUrl
+                : slotDataArray[i].filteredDataUrl;
+              const img = await loadImage(imgSrc);
+              if (img) drawImageCover(ctx, img, x, y, cellW, cellH);
+              if (slotFilter.timestamp) {
+                FilterModule.drawDisposableTimestamp(ctx, cellW, cellH, x, y);
+              }
+            } else {
+              ctx.fillStyle = '#54351A';
+              ctx.font = 'bold 26px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(`Pose #${i + 1}`, x + cellW / 2, y + cellH / 2);
+            }
+          }
+          return;
+        }
+
+        const width = isStrip ? 720 : (isSingle ? 900 : 1080);
+        const height = isStrip ? (frameTemplate.count === 3 ? 1740 : 1280) : (isSingle ? 1160 : (frameTemplate.count === 6 ? 1580 : 1360));
+
+        targetCanvas.width = width;
+        targetCanvas.height = height;
+
+        ctx.fillStyle = frameTemplate.bg;
+        ctx.fillRect(0, 0, width, height);
+
+        if (frameTemplate.pattern === 'polkadot') {
+          ctx.save();
+          ctx.fillStyle = frameTemplate.dotColor || frameTemplate.accent;
+          ctx.globalAlpha = 0.75;
+          const step = 64;
+          for (let y = 28; y < height; y += step) {
+            for (let x = 28; x < width; x += step) {
+              const offsetX = (Math.floor(y / step) % 2) * (step / 2);
+              ctx.beginPath();
+              ctx.arc(x + offsetX, y, 10, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+          ctx.restore();
+        } else if (frameTemplate.pattern === 'checker') {
+          ctx.save();
+          ctx.fillStyle = frameTemplate.accent;
+          ctx.globalAlpha = 0.22;
+          const tile = 44;
+          for (let y = 0; y < height; y += tile) {
+            for (let x = 0; x < width; x += tile) {
+              if (((x / tile) + (y / tile)) % 2 === 0) {
+                ctx.fillRect(x, y, tile, tile);
+              }
+            }
+          }
+          ctx.restore();
+        }
+
+        if (frameTemplate.pattern === 'checker' || frameTemplate.pattern === 'polkadot') {
+          ctx.save();
+          ctx.fillStyle = frameTemplate.bg;
+          drawRoundRectPath(ctx, 38, 38, width - 76, height - 76, 28);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        if (frameTemplate.pattern === 'floral') {
+          drawFloralDecorations(ctx, width, height, frameTemplate.flowerColors);
+        }
+
+        const padX = 64;
+        const topSpace = 98;
+        const bottomSpace = 236;
+        const availW = width - padX * 2;
+        const availH = height - topSpace - bottomSpace;
+        const gap = 24;
+
+        let cols = 2, rows = 2;
+        if (isSingle) { cols = 1; rows = 1; }
+        else if (frameTemplate.layout === 'vertical_2') { cols = 1; rows = 2; }
+        else if (frameTemplate.layout === 'vertical_3') { cols = 1; rows = 3; }
+        else if (frameTemplate.layout === 'grid_2x3') { cols = 2; rows = 3; }
+
+        const cellW = (availW - gap * (cols - 1)) / cols;
+        const cellH = (availH - gap * (rows - 1)) / rows;
+
+        ctx.fillStyle = frameTemplate.fg;
+        ctx.globalAlpha = 0.85;
+        ctx.font = '700 20px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('RAFQA PRODUCTION PHOTOBOOTH', width / 2, 66);
+        ctx.globalAlpha = 1;
+
+        for (let i = 0; i < frameTemplate.count; i++) {
+          const r = Math.floor(i / cols);
+          const c = i % cols;
+          const x = padX + c * (cellW + gap);
+          const y = topSpace + r * (cellH + gap);
+
+          ctx.save();
+          ctx.shadowColor = 'rgba(26, 22, 20, 0.14)';
+          ctx.shadowBlur = 18;
+          ctx.shadowOffsetY = 6;
+          if (frameTemplate.slotShape === 'arch') {
+            drawArchPath(ctx, x, y, cellW, cellH);
+          } else {
+            drawRoundRectPath(ctx, x, y, cellW, cellH, 18);
+          }
+          ctx.fillStyle = '#EAE2D6';
+          ctx.fill();
+          ctx.restore();
+
+          ctx.save();
+          if (frameTemplate.slotShape === 'arch') {
+            drawArchPath(ctx, x, y, cellW, cellH);
+          } else {
+            drawRoundRectPath(ctx, x, y, cellW, cellH, 18);
+          }
+          ctx.clip();
+
+          if (!isSimulation && slotDataArray[i]) {
+            const slotFilter = FilterModule.getById(slotDataArray[i].filterId || FilterModule.getActive().id);
+            const imgSrc = (slotFilter.timestamp && slotDataArray[i].frameReadyDataUrl)
+              ? slotDataArray[i].frameReadyDataUrl
+              : slotDataArray[i].filteredDataUrl;
+            const img = await loadImage(imgSrc);
+            if (img) drawImageCover(ctx, img, x, y, cellW, cellH);
+            if (slotFilter.timestamp) {
+              FilterModule.drawDisposableTimestamp(ctx, cellW, cellH, x, y);
+            }
+          } else {
+            ctx.fillStyle = frameTemplate.accent;
+            ctx.font = 'bold 26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Pose #${i + 1}`, x + cellW / 2, y + cellH / 2);
+          }
+          ctx.restore();
+        }
+
+        if (frameTemplate.pattern === 'floral') {
+          const [c1, c2, c3, leafColor] = frameTemplate.flowerColors || ['#F4A261', '#E76F51', '#E9C46A', '#8AB17D'];
+          const midX = width / 2;
+          const dividerY = height - bottomSpace + 22;
+          drawBotanicalLeaf(ctx, midX - 18, dividerY, Math.PI + 0.15, 34, 8, leafColor);
+          drawBotanicalLeaf(ctx, midX + 18, dividerY, -0.15, 34, 8, leafColor);
+          drawFlowerBlossom(ctx, midX, dividerY, 12, c2, '#FFF8E7', 5);
+          drawFlowerBlossom(ctx, midX - 24, dividerY + 2, 8, c1, '#FFFFFF', 5);
+          drawFlowerBlossom(ctx, midX + 24, dividerY + 2, 8, c3, '#FFFFFF', 5);
+        }
+
+        let cursorY = height - bottomSpace + (frameTemplate.pattern === 'floral' ? 66 : 54);
+        ctx.textAlign = 'center';
+
+        if (eventConfig.showEventName && eventConfig.eventName) {
+          ctx.fillStyle = frameTemplate.fg;
+          ctx.font = `800 ${isStrip ? 32 : 40}px "Plus Jakarta Sans", sans-serif`;
+          ctx.fillText(eventConfig.eventName, width / 2, cursorY);
+          cursorY += 38;
+        }
+
+        const subParts = [];
+        if (eventConfig.showHashtag && eventConfig.eventSubtitle) subParts.push(eventConfig.eventSubtitle);
+        if (eventConfig.showDate && eventConfig.eventDate) subParts.push(EventConfigModule.getFormattedDate());
+
+        if (subParts.length > 0) {
+          ctx.fillStyle = frameTemplate.accent;
+          ctx.font = '700 20px "JetBrains Mono", monospace';
+          ctx.fillText(subParts.join(' • '), width / 2, cursorY);
+          cursorY += 34;
+        }
+
+        if (guestMeta.guestName || guestMeta.guestWish) {
+          ctx.fillStyle = frameTemplate.fg;
+          ctx.font = '600 20px "Inter", sans-serif';
+          const wishLine = guestMeta.guestWish
+            ? `"${guestMeta.guestWish}" — ${guestMeta.guestName || 'Tamu'}`
+            : `Oleh: ${guestMeta.guestName}`;
+          ctx.fillText(wishLine.slice(0, 56), width / 2, cursorY);
+          cursorY += 30;
+        }
+
+        if (eventConfig.footerText) {
+          ctx.fillStyle = frameTemplate.fg;
+          ctx.globalAlpha = 0.65;
+          ctx.font = '600 17px "JetBrains Mono", monospace';
+          ctx.fillText(eventConfig.footerText, width / 2, cursorY);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      function drawImageCover(ctx, img, x, y, w, h) {
+        const imgRatio = img.width / img.height;
+        const boxRatio = w / h;
+        let sx, sy, sw, sh;
+        if (imgRatio > boxRatio) {
+          sh = img.height; sw = img.height * boxRatio;
+          sx = (img.width - sw) / 2; sy = 0;
+        } else {
+          sw = img.width; sh = img.width / boxRatio;
+          sx = 0; sy = (img.height - sh) / 2;
+        }
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+      }
+
+      return { composeFrame };
+    })();
+
+
+    /**
+     * 7. REVIEW SCREEN MODULE
+     */
+    const PreviewModule = (() => {
+      async function open() {
+        const poseCount = FrameModule.getPoseCount();
+        const slots = CaptureModule.getSlots();
+        if (slots.filter(Boolean).length < poseCount) {
+          return App.toast(`Lengkapi ${poseCount} pose terlebih dahulu`, 'error');
+        }
+
+        const savedGuest = localStorage.getItem('rafqa_guest_name') || '';
+        document.getElementById('preview-guest-name').value = savedGuest;
+        document.getElementById('preview-pose-count-label').textContent = poseCount === 1 ? 'Single 1 Foto' : `${poseCount} Foto`;
+
+        renderVisualFrameCards();
+        document.getElementById('preview-filter-select').value = FilterModule.getActive().id;
+        App.navigate('preview');
+        await renderFinal();
+      }
+
+      function renderVisualFrameCards() {
+        const container = document.getElementById('preview-frame-cards');
+        if (!container) return;
+        const poseCount = FrameModule.getPoseCount();
+        const activeFrame = FrameModule.getActiveFrame();
+        const frames = FrameModule.getFramesByCount(poseCount);
+
+        container.innerHTML = '';
+        frames.forEach(f => {
+          const card = document.createElement('div');
+          card.className = `visual-frame-card ${f.id === activeFrame.id ? 'active' : ''}`;
+          card.onclick = () => changeFrame(f.id);
+
+          let patternCss = '';
+          if (f.pattern === 'polkadot') {
+            patternCss = `background-image: radial-gradient(${f.dotColor || f.accent} 2.2px, transparent 2.2px); background-size: 9px 9px;`;
+          } else if (f.pattern === 'checker') {
+            patternCss = `background-image: repeating-conic-gradient(${f.accent}33 0% 25%, transparent 0% 50%); background-size: 10px 10px;`;
+          }
+
+          if (f.pattern === 'none') {
+            card.innerHTML = `
+              <div class="mini-frame-thumb" style="background: #FFFFFF; border-style: dashed; align-items: center; justify-content: center;">
+                <i class="ph-bold ph-prohibit" style="font-size: 1.4rem; color: var(--cocoa-700);"></i>
+              </div>
+              <div>
+                <div style="font-family: var(--font-display); font-weight: 800; font-size: 0.74rem; line-height: 1.2; color: var(--obsidian-950);">${f.name}</div>
+                <div style="font-size: 0.65rem; color: var(--cocoa-800); margin-top: 1px;">${f.style}</div>
+              </div>
+            `;
+            container.appendChild(card);
+            return;
+          }
+
+          const slotCountPreview = Math.min(f.count, 3);
+          const slotRadius = f.slotShape === 'arch' ? '8px 8px 3px 3px' : '4px';
+          let miniSlotsHtml = '';
+          for (let s = 0; s < slotCountPreview; s++) {
+            miniSlotsHtml += `<div style="flex:1; background: rgba(255,255,255,0.65); border-radius: ${slotRadius}; box-shadow: 0 1px 2px rgba(0,0,0,0.08);"></div>`;
+          }
+
+          const floralBadgeHtml = f.pattern === 'floral'
+            ? `<i class="ph-fill ph-flower-lotus" style="position:absolute; top:2px; right:3px; font-size:0.8rem; color:${f.accent};"></i>`
+            : '';
+
+          card.innerHTML = `
+            <div class="mini-frame-thumb" style="background-color: ${f.bg}; border: 1.5px solid rgba(26,22,20,0.2); ${patternCss}">
+              ${floralBadgeHtml}
+              <div style="display:flex; flex-direction:column; gap:2.5px; flex:1; padding: 2px; background:${f.bg}cc; border-radius: 4px;">
+                ${miniSlotsHtml}
+              </div>
+              <div style="height: 6px; background: ${f.accent}; border-radius: 3px; margin-top: 3px; opacity: 0.85;"></div>
+            </div>
+            <div>
+              <div style="font-family: var(--font-display); font-weight: 800; font-size: 0.74rem; line-height: 1.2; color: var(--obsidian-950);">${f.name}</div>
+              <div style="font-size: 0.65rem; color: var(--cocoa-800); margin-top: 1px;">${f.style}</div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      async function renderFinal() {
+        const canvas = document.getElementById('final-render-canvas');
+        const guestName = document.getElementById('preview-guest-name')?.value.trim() || '';
+        const guestWish = document.getElementById('preview-guest-wish')?.value.trim() || '';
+        await RendererModule.composeFrame(canvas, CaptureModule.getSlots(), FrameModule.getActiveFrame(), EventConfigModule.get(), { guestName, guestWish }, false);
+      }
+
+      async function changeFilter(newFilterId) {
+        FilterModule.select(newFilterId);
+        const filterObj = FilterModule.getById(newFilterId);
+        const cleanFilterObj = filterObj.timestamp ? { ...filterObj, timestamp: false } : filterObj;
+        const slots = CaptureModule.getSlots();
+        for (let i = 0; i < slots.length; i++) {
+          if (!slots[i]) continue;
+          const img = new Image();
+          await new Promise(res => { img.onload = res; img.src = slots[i].rawDataUrl; });
+
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = img.width;
+          tempCanvas.height = img.height;
+          FilterModule.applyFilterToCanvas(img, tempCanvas, filterObj, false);
+          slots[i].filteredDataUrl = tempCanvas.toDataURL('image/jpeg', 0.92);
+
+          const cleanCanvas = document.createElement('canvas');
+          cleanCanvas.width = img.width;
+          cleanCanvas.height = img.height;
+          FilterModule.applyFilterToCanvas(img, cleanCanvas, cleanFilterObj, false);
+          slots[i].frameReadyDataUrl = cleanCanvas.toDataURL('image/jpeg', 0.92);
+          slots[i].filterId = newFilterId;
+        }
+        await renderFinal();
+      }
+
+      async function changeFrame(newFrameId) {
+        FrameModule.select(newFrameId);
+        renderVisualFrameCards();
+        await renderFinal();
+      }
+
+      function downloadPhoto() {
+        const canvas = document.getElementById('final-render-canvas');
+        const config = EventConfigModule.get();
+        const link = document.createElement('a');
+        link.download = `rafqa-production-${config.eventSlug}-${Date.now()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.94);
+        link.click();
+        App.toast('Foto berhasil diunduh ke perangkat!', 'success');
+      }
+
+      return { open, renderFinal, changeFilter, changeFrame, downloadPhoto };
+    })();
+
+
+    /**
+     * 8. UPLOAD TO GOOGLE DRIVE (VIA GOOGLE APPS SCRIPT) & GALLERY ARCHIVE MODULE
+     */
+    const UploadModule = (() => {
+      let isUploading = false;
+      let lastUploadedSignature = '';
+
+      function isGasConfigured() {
+        return typeof GAS_WEB_APP_URL === 'string' &&
+          GAS_WEB_APP_URL.startsWith('https://script.google.com/') &&
+          !GAS_WEB_APP_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_DEPLOYMENT_ID');
+      }
+
+      function createCompressedUploadBase64(sourceCanvas) {
+        const maxDim = 1500;
+        const w = sourceCanvas.width;
+        const h = sourceCanvas.height;
+        if (Math.max(w, h) <= maxDim) {
+          return sourceCanvas.toDataURL('image/jpeg', 0.86);
+        }
+        const scale = maxDim / Math.max(w, h);
+        const temp = document.createElement('canvas');
+        temp.width = Math.round(w * scale);
+        temp.height = Math.round(h * scale);
+        temp.getContext('2d').drawImage(sourceCanvas, 0, 0, temp.width, temp.height);
+        return temp.toDataURL('image/jpeg', 0.86);
+      }
+
+      async function uploadFinalPhoto() {
+        if (isUploading) return;
+        if (EventConfigModule.getEventLifecycleState().status !== 'LIVE_ACTIVE') {
+          return App.toast('Sesi kamera 24 jam telah berakhir.', 'error');
+        }
+
+        const btn = document.getElementById('btn-upload-drive');
+        const canvas = document.getElementById('final-render-canvas');
+        const config = EventConfigModule.get();
+        const guestName = document.getElementById('preview-guest-name').value.trim() || 'Tamu Undangan';
+        const guestWish = document.getElementById('preview-guest-wish').value.trim();
+
+        const localHighResBase64 = canvas.toDataURL('image/jpeg', 0.92);
+        const currentSignature = `${config.eventId}_${guestName}_${localHighResBase64.length}_${localHighResBase64.slice(-64)}`;
+        if (lastUploadedSignature === currentSignature) {
+          App.navigate('gallery');
+          return;
+        }
+
+        isUploading = true;
+        lastUploadedSignature = currentSignature;
+
+        localStorage.setItem('rafqa_guest_name', guestName);
+        btn.disabled = true;
+        btn.innerHTML = `<i class="ph-bold ph-spinner"></i> Menyimpan ke Google Drive...`;
+
+        const uploadBase64 = createCompressedUploadBase64(canvas);
+        const filename = `${config.eventId}_${Date.now()}.jpg`;
+        let drivePhotoUrl = localHighResBase64;
+        let driveFileId = 'ph_' + Date.now();
+
+        try {
+          if (isGasConfigured()) {
+            const response = await fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              redirect: 'follow',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'upload',
+                folderId: config.driveFolderId || DEFAULT_DRIVE_FOLDER_ID,
+                rootFolderId: config.driveFolderId || DEFAULT_DRIVE_FOLDER_ID,
+                eventId: config.eventId,
+                eventName: config.eventName,
+                guestName,
+                guestWish,
+                filename,
+                mimeType: 'image/jpeg',
+                imageBase64: uploadBase64,
+                timestamp: new Date().toISOString()
+              })
+            });
+
+            const rawText = await response.text();
+            let resJson = null;
+            try {
+              resJson = JSON.parse(rawText);
+            } catch (parseErr) {
+              throw new Error('Respon Apps Script bukan JSON.');
+            }
+
+            if (resJson && resJson.status === 'success') {
+              if (resJson.fileUrl) drivePhotoUrl = resJson.fileUrl;
+              if (resJson.fileId) driveFileId = resJson.fileId;
+            }
+          }
+
+          GalleryModule.saveLocalPhoto(config.eventId, {
+            id: driveFileId,
+            name: filename,
+            guestName,
+            guestWish,
+            likes: 0,
+            url: drivePhotoUrl,
+            localPreviewUrl: localHighResBase64,
+            timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          });
+
+          App.navigate('gallery');
+        } catch (err) {
+          GalleryModule.saveLocalPhoto(config.eventId, {
+            id: driveFileId,
+            name: filename,
+            guestName,
+            guestWish,
+            likes: 0,
+            url: localHighResBase64,
+            localPreviewUrl: localHighResBase64,
+            timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          });
+          App.navigate('gallery');
+        } finally {
+          isUploading = false;
+          btn.disabled = false;
+          btn.innerHTML = `<i class="ph-bold ph-cloud-arrow-up"></i> Simpan ke Album & Galeri`;
+        }
+      }
+
+      return { uploadFinalPhoto, isGasConfigured };
+    })();
+
+
+    const GalleryModule = (() => {
+      let currentLightboxPhotoId = null;
+      let pendingDeletePhotoId = null;
+      let slideshowTimer = null;
+      let slideshowProgressTimer = null;
+      let isSlideshowPlaying = false;
+      const SLIDESHOW_DURATION_MS = 4000;
+
+      function getStorageKey(eventId) { return `rafqa_gallery_${eventId}`; }
+      function getLikedStorageKey(eventId) { return `rafqa_liked_ids_${eventId}`; }
+
+      function saveLocalPhoto(eventId, photoObj) {
+        const key = getStorageKey(eventId);
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const filtered = existing.filter(item =>
+          item.id !== photoObj.id &&
+          !(photoObj.name && item.name === photoObj.name)
+        );
+        filtered.unshift(photoObj);
+        localStorage.setItem(key, JSON.stringify(filtered.slice(0, 60)));
+      }
+
+      async function syncFromGoogleDrive(eventId) {
+        if (!UploadModule.isGasConfigured()) return getPhotos();
+        try {
+          const config = EventConfigModule.get();
+          const folderId = config.driveFolderId || DEFAULT_DRIVE_FOLDER_ID;
+          const url = `${GAS_WEB_APP_URL}?action=list&eventId=${encodeURIComponent(eventId)}&folderId=${encodeURIComponent(folderId)}&_t=${Date.now()}`;
+          const res = await fetch(url, { redirect: 'follow' });
+          const data = await res.json();
+          if (data && Array.isArray(data.photos)) {
+            const localPhotos = getPhotos();
+            const localById = new Map();
+            const localByName = new Map();
+            localPhotos.forEach(lp => {
+              if (lp.id) localById.set(lp.id, lp);
+              if (lp.name) localByName.set(lp.name, lp);
+            });
+
+            const syncedPhotos = data.photos.map(dp => {
+              const matchedLocal = localById.get(dp.id) || (dp.name ? localByName.get(dp.name) : null);
+              if (matchedLocal) {
+                return {
+                  ...dp,
+                  guestName: dp.guestName || matchedLocal.guestName,
+                  guestWish: dp.guestWish || matchedLocal.guestWish,
+                  localPreviewUrl: matchedLocal.localPreviewUrl || dp.localPreviewUrl
+                };
+              }
+              return dp;
+            });
+
+            localStorage.setItem(getStorageKey(eventId), JSON.stringify(syncedPhotos));
+            return syncedPhotos;
+          }
+        } catch (e) {}
+        return getPhotos();
+      }
+
+      function getPhotos() {
+        const config = EventConfigModule.get();
+        return JSON.parse(localStorage.getItem(getStorageKey(config.eventId)) || '[]');
+      }
+
+      function getLikedIds() {
+        const config = EventConfigModule.get();
+        return JSON.parse(localStorage.getItem(getLikedStorageKey(config.eventId)) || '[]');
+      }
+
+      function toggleLike(photoId, event) {
+        if (event) event.stopPropagation();
+        const config = EventConfigModule.get();
+        const photos = getPhotos();
+        const idx = photos.findIndex(p => p.id === photoId);
+        if (idx === -1) return;
+
+        let likedIds = getLikedIds();
+        const alreadyLiked = likedIds.includes(photoId);
+        const delta = alreadyLiked ? -1 : 1;
+
+        if (alreadyLiked) {
+          photos[idx].likes = Math.max(0, (photos[idx].likes || 1) - 1);
+          likedIds = likedIds.filter(id => id !== photoId);
+        } else {
+          photos[idx].likes = (photos[idx].likes || 0) + 1;
+          likedIds.push(photoId);
+        }
+
+        localStorage.setItem(getStorageKey(config.eventId), JSON.stringify(photos));
+        localStorage.setItem(getLikedStorageKey(config.eventId), JSON.stringify(likedIds));
+
+        if (UploadModule.isGasConfigured() && !String(photoId).startsWith('ph_')) {
+          fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'like', fileId: photoId, delta })
+          }).catch(() => {});
+        }
+
+        refresh();
+        if (currentLightboxPhotoId === photoId) {
+          updateLightboxLikeUI(photos[idx]);
+        }
+      }
+
+      function promptDelete(photoId, event) {
+        if (event) event.stopPropagation();
+        pauseSlideshow();
+        const photoObj = getPhotos().find(p => p.id === photoId);
+        if (!photoObj) return;
+        pendingDeletePhotoId = photoId;
+        const descEl = document.getElementById('delete-confirm-desc');
+        if (descEl) {
+          descEl.textContent = `Foto milik "${photoObj.guestName || 'Tamu Undangan'}" akan dihapus permanen dari galeri dan Google Drive.`;
+        }
+        document.getElementById('delete-confirm-modal').classList.add('active');
+      }
+
+      function closeDeleteConfirm(e) {
+        if (!e || e.target.id === 'delete-confirm-modal') {
+          pendingDeletePhotoId = null;
+          document.getElementById('delete-confirm-modal').classList.remove('active');
+        }
+      }
+
+      async function executeDelete() {
+        if (!pendingDeletePhotoId) return;
+        const targetId = pendingDeletePhotoId;
+        const config = EventConfigModule.get();
+        const photos = getPhotos();
+        const targetIndex = photos.findIndex(p => p.id === targetId);
+        const targetPhoto = targetIndex !== -1 ? photos[targetIndex] : null;
+        const remainingPhotos = photos.filter(p => p.id !== targetId);
+
+        const execBtn = document.getElementById('btn-confirm-delete-exec');
+        if (execBtn) {
+          execBtn.disabled = true;
+          execBtn.innerHTML = `<i class="ph-bold ph-spinner"></i> Menghapus...`;
+        }
+
+        localStorage.setItem(getStorageKey(config.eventId), JSON.stringify(remainingPhotos));
+
+        const likedIds = getLikedIds().filter(id => id !== targetId);
+        localStorage.setItem(getLikedStorageKey(config.eventId), JSON.stringify(likedIds));
+
+        if (UploadModule.isGasConfigured()) {
+          try {
+            await fetch(GAS_WEB_APP_URL, {
+              method: 'POST',
+              redirect: 'follow',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'delete',
+                fileId: targetId,
+                filename: targetPhoto ? targetPhoto.name : '',
+                eventId: config.eventId,
+                folderId: config.driveFolderId || DEFAULT_DRIVE_FOLDER_ID
+              })
+            });
+          } catch (e) {}
+        }
+
+        if (execBtn) {
+          execBtn.disabled = false;
+          execBtn.innerHTML = `<i class="ph-bold ph-trash"></i> Hapus`;
+        }
+
+        closeDeleteConfirm();
+        App.toast('Foto berhasil dihapus dari galeri & Google Drive.', 'success');
+
+        if (currentLightboxPhotoId === targetId) {
+          if (remainingPhotos.length === 0) {
+            closeLightbox();
+          } else {
+            const nextIdx = Math.min(targetIndex, remainingPhotos.length - 1);
+            openLightbox(remainingPhotos[nextIdx].id, false);
+          }
+        }
+
+        await refresh();
+      }
+
+      function updateLightboxLikeUI(photoObj) {
+        const btn = document.getElementById('lightbox-like-btn');
+        const countEl = document.getElementById('lightbox-like-count');
+        if (!btn || !countEl || !photoObj) return;
+        const isLiked = getLikedIds().includes(photoObj.id);
+        btn.classList.toggle('liked', isLiked);
+        btn.innerHTML = `<i class="${isLiked ? 'ph-fill' : 'ph-bold'} ph-heart"></i> <span id="lightbox-like-count">${photoObj.likes || 0}</span>`;
+      }
+
+      async function refresh() {
+        EventConfigModule.evaluate24HourStatus();
+        const container = document.getElementById('gallery-content');
+        const config = EventConfigModule.get();
+        const isLive = EventConfigModule.getEventLifecycleState().status === 'LIVE_ACTIVE';
+
+        let photos = await syncFromGoogleDrive(config.eventId);
+        const likedIds = getLikedIds();
+
+        const slideshowBtn = document.getElementById('btn-start-slideshow');
+        if (slideshowBtn) slideshowBtn.disabled = photos.length === 0;
+
+        if (photos.length === 0) {
+          container.innerHTML = `
+            <div class="neo-card" style="padding: 40px 18px; text-align: center; max-width: 480px; margin: 16px auto;">
+              <i class="ph-bold ph-images" style="font-size: 2.5rem; color: var(--tangerine-600); margin-bottom: 10px;"></i>
+              <h3 style="font-size: 1.3rem; margin-bottom: 6px;">Album Masih Kosong</h3>
+              <p style="font-size: 0.85rem; color: var(--cocoa-800); margin-bottom: 16px;">
+                Belum ada foto yang tersimpan di <strong>${config.eventName}</strong>.
+              </p>
+              ${isLive ? `<button class="btn btn-orange" onclick="App.navigate('booth')"><i class="ph-bold ph-camera"></i> Mulai Foto Sekarang</button>` : ''}
+            </div>
+          `;
+          return;
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'gallery-grid';
+
+        photos.forEach(p => {
+          const isLiked = likedIds.includes(p.id);
+          const likesCount = p.likes || 0;
+          const imgSrc = p.localPreviewUrl || p.url;
+          const card = document.createElement('div');
+          card.className = 'gallery-card';
+          card.onclick = () => openLightbox(p.id, false);
+          card.innerHTML = `
+            <img src="${imgSrc}" alt="${p.guestName || 'Foto Tamu'}" loading="lazy" />
+            <div class="gallery-card-meta">
+              <div style="min-width: 0; flex: 1;">
+                <div style="font-weight: 800; color: var(--obsidian-950); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.guestName || 'Tamu Undangan'}</div>
+                ${p.guestWish ? `<div style="font-size: 0.7rem; color: var(--cocoa-800); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">"${p.guestWish}"</div>` : ''}
+                <div style="font-family: var(--font-mono); font-size: 0.64rem; color: var(--tangerine-600); margin-top: 3px;">${p.timestamp || ''}</div>
+              </div>
+              <button class="like-btn ${isLiked ? 'liked' : ''}" onclick="GalleryModule.toggleLike('${p.id}', event)" title="Sukai foto ini">
+                <i class="${isLiked ? 'ph-fill' : 'ph-bold'} ph-heart"></i>
+                <span>${likesCount}</span>
+              </button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        container.innerHTML = '';
+        container.appendChild(grid);
+      }
+
+      async function downloadAllZip() {
+        const photos = getPhotos();
+        const config = EventConfigModule.get();
+        if (photos.length === 0) return App.toast('Belum ada foto untuk diunduh.', 'error');
+
+        App.toast(`Mengemas ${photos.length} foto ke arsip ZIP...`);
+        const zip = new JSZip();
+        for (let idx = 0; idx < photos.length; idx++) {
+          const p = photos[idx];
+          const src = p.localPreviewUrl || p.url;
+          const safeFilename = `${String(idx + 1).padStart(3, '0')}-${(p.guestName || 'tamu').toLowerCase().replace(/[^a-z0-9]+/g, '-')}.jpg`;
+          if (src && src.startsWith('data:')) {
+            const base64Content = src.split(',')[1];
+            if (base64Content) zip.file(safeFilename, base64Content, { base64: true });
+          } else if (src) {
+            try {
+              const resp = await fetch(src);
+              const blob = await resp.blob();
+              zip.file(safeFilename, blob);
+            } catch (e) {}
+          }
+        }
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+        saveAs(blob, `rafqa-production-${config.eventSlug}-album.zip`);
+        App.toast('Arsip ZIP berhasil diunduh!', 'success');
+      }
+
+      function openLightbox(photoId, autoStartSlideshow = false) {
+        const photos = getPhotos();
+        const idx = photos.findIndex(p => p.id === photoId);
+        if (idx === -1) return;
+
+        const photoObj = photos[idx];
+        currentLightboxPhotoId = photoId;
+        const modal = document.getElementById('lightbox-modal');
+        const displayUrl = photoObj.localPreviewUrl || photoObj.url;
+
+        document.getElementById('lightbox-img').src = displayUrl;
+        document.getElementById('lightbox-counter').textContent = `${idx + 1} / ${photos.length}`;
+        document.getElementById('lightbox-guest-name').textContent = photoObj.guestName || 'Tamu Undangan';
+        document.getElementById('lightbox-guest-wish').textContent = photoObj.guestWish ? `"${photoObj.guestWish}"` : '';
+
+        const hasMultiple = photos.length > 1;
+        document.getElementById('lightbox-prev-btn').style.display = hasMultiple ? 'flex' : 'none';
+        document.getElementById('lightbox-next-btn').style.display = hasMultiple ? 'flex' : 'none';
+
+        const likeBtn = document.getElementById('lightbox-like-btn');
+        likeBtn.onclick = (e) => toggleLike(photoId, e);
+        updateLightboxLikeUI(photoObj);
+
+        const dlBtn = document.getElementById('lightbox-download-btn');
+        dlBtn.style.display = EventConfigModule.get().allowDownload ? 'inline-flex' : 'none';
+        dlBtn.onclick = () => saveAs(displayUrl, photoObj.name || 'rafqa-production-photo.jpg');
+
+        const delBtn = document.getElementById('lightbox-delete-btn');
+        delBtn.onclick = (e) => promptDelete(photoId, e);
+
+        modal.classList.add('active');
+
+        if (autoStartSlideshow) {
+          playSlideshow();
+        } else if (isSlideshowPlaying) {
+          resetSlideshowProgress();
+        }
+      }
+
+      function nextPhoto(e) {
+        if (e) e.stopPropagation();
+        const photos = getPhotos();
+        if (photos.length <= 1 || !currentLightboxPhotoId) return;
+        const currentIdx = photos.findIndex(p => p.id === currentLightboxPhotoId);
+        const nextIdx = (currentIdx + 1) % photos.length;
+        openLightbox(photos[nextIdx].id, false);
+      }
+
+      function prevPhoto(e) {
+        if (e) e.stopPropagation();
+        const photos = getPhotos();
+        if (photos.length <= 1 || !currentLightboxPhotoId) return;
+        const currentIdx = photos.findIndex(p => p.id === currentLightboxPhotoId);
+        const prevIdx = (currentIdx - 1 + photos.length) % photos.length;
+        openLightbox(photos[prevIdx].id, false);
+      }
+
+      function startSlideshow() {
+        const photos = getPhotos();
+        if (photos.length === 0) return App.toast('Belum ada foto untuk diputar.', 'error');
+        openLightbox(photos[0].id, true);
+      }
+
+      function playSlideshow() {
+        const photos = getPhotos();
+        if (photos.length <= 1) {
+          App.toast('Minimal 2 foto diperlukan untuk slideshow otomatis.');
+          return;
+        }
+        isSlideshowPlaying = true;
+        updateSlideshowButtonUI();
+        resetSlideshowProgress();
+
+        if (slideshowTimer) clearInterval(slideshowTimer);
+        slideshowTimer = setInterval(() => {
+          nextPhoto();
+        }, SLIDESHOW_DURATION_MS);
+      }
+
+      function pauseSlideshow() {
+        isSlideshowPlaying = false;
+        if (slideshowTimer) clearInterval(slideshowTimer);
+        if (slideshowProgressTimer) clearInterval(slideshowProgressTimer);
+        slideshowTimer = null;
+        slideshowProgressTimer = null;
+        const bar = document.getElementById('slideshow-progress-bar');
+        const fill = document.getElementById('slideshow-progress-fill');
+        if (bar) bar.classList.remove('active');
+        if (fill) fill.style.width = '0%';
+        updateSlideshowButtonUI();
+      }
+
+      function toggleSlideshowPlay(e) {
+        if (e) e.stopPropagation();
+        if (isSlideshowPlaying) {
+          pauseSlideshow();
+        } else {
+          playSlideshow();
+        }
+      }
+
+      function resetSlideshowProgress() {
+        const bar = document.getElementById('slideshow-progress-bar');
+        const fill = document.getElementById('slideshow-progress-fill');
+        if (!bar || !fill) return;
+        bar.classList.add('active');
+        if (slideshowProgressTimer) clearInterval(slideshowProgressTimer);
+
+        const startTime = Date.now();
+        fill.style.width = '0%';
+        slideshowProgressTimer = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const pct = Math.min(100, (elapsed / SLIDESHOW_DURATION_MS) * 100);
+          fill.style.width = `${pct}%`;
+        }, 40);
+      }
+
+      function updateSlideshowButtonUI() {
+        const btn = document.getElementById('lightbox-play-btn');
+        if (!btn) return;
+        if (isSlideshowPlaying) {
+          btn.className = 'btn btn-orange btn-sm';
+          btn.innerHTML = `<i class="ph-bold ph-pause"></i> <span>Pause</span>`;
+        } else {
+          btn.className = 'btn btn-dark btn-sm';
+          btn.innerHTML = `<i class="ph-bold ph-play"></i> <span>Slideshow</span>`;
+        }
+      }
+
+      function closeLightbox(e) {
+        if (!e || e.target.id === 'lightbox-modal') {
+          pauseSlideshow();
+          currentLightboxPhotoId = null;
+          document.getElementById('lightbox-modal').classList.remove('active');
+        }
+      }
+
+      return {
+        saveLocalPhoto,
+        toggleLike,
+        promptDelete,
+        closeDeleteConfirm,
+        executeDelete,
+        refresh,
+        downloadAllZip,
+        openLightbox,
+        nextPhoto,
+        prevPhoto,
+        startSlideshow,
+        toggleSlideshowPlay,
+        closeLightbox
+      };
+    })();
+
+
+    /**
+     * 9. MAIN APP CONTROLLER
+     */
+    const App = (() => {
+      function init() {
+        EventConfigModule.init();
+        EventAccessModule.checkPinGate();
+        FilterModule.init();
+        FrameModule.init();
+        CaptureModule.syncSlotCount(FrameModule.getActiveFrame().count);
+        EventConfigModule.renderCustomizerPreview();
+
+        window.addEventListener('keydown', (e) => {
+          const lightbox = document.getElementById('lightbox-modal');
+          const delModal = document.getElementById('delete-confirm-modal');
+          if (delModal && delModal.classList.contains('active')) {
+            if (e.key === 'Escape') GalleryModule.closeDeleteConfirm();
+            return;
+          }
+          if (lightbox && lightbox.classList.contains('active')) {
+            if (e.key === 'ArrowRight') GalleryModule.nextPhoto();
+            else if (e.key === 'ArrowLeft') GalleryModule.prevPhoto();
+            else if (e.key === 'Escape') GalleryModule.closeLightbox();
+            else if (e.key === ' ') {
+              e.preventDefault();
+              GalleryModule.toggleSlideshowPlay();
+            }
+          }
+        });
+
+        const status = EventConfigModule.evaluate24HourStatus();
+        if (status === 'LIVE_ACTIVE') {
+          CameraModule.start();
+        } else if (status === 'ARCHIVED') {
+          navigate('gallery');
+        }
+
+        setTimeout(() => {
+          document.getElementById('loading-overlay').classList.add('hidden');
+        }, 500);
+      }
+
+      function navigate(viewName) {
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        const target = document.getElementById(`view-${viewName}`);
+        if (target) target.classList.add('active');
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.view === viewName);
+        });
+
+        if (viewName === 'booth') {
+          const st = EventConfigModule.evaluate24HourStatus();
+          if (st === 'LIVE_ACTIVE') CameraModule.start();
+        } else {
+          CameraModule.stop();
+        }
+
+        if (viewName === 'gallery') GalleryModule.refresh();
+        if (viewName === 'customize') EventConfigModule.renderCustomizerPreview();
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function toast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = 'toast';
+        const icon = type === 'success' ? 'ph-check-circle' : (type === 'error' ? 'ph-warning-circle' : 'ph-info');
+        el.innerHTML = `<i class="ph-bold ${icon}" style="color: var(--tangerine-400); font-size: 1.1rem;"></i> <span>${message}</span>`;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => el.remove(), 280);
+        }, 3500);
+      }
+
+      return { init, navigate, toast };
+    })();
+
+    window.addEventListener('DOMContentLoaded', App.init);
+  </script>
+</body>
+</html>
